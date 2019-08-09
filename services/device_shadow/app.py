@@ -1,4 +1,5 @@
 import logging
+import os
 from flask import Flask, request
 
 from models import Device
@@ -6,7 +7,7 @@ from models import Device
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEVICES = {device.id: device for device in Device.get_all()}
+DEVICES = {device.id: device for device in Device.get_all(console_id=os.environ["CONSOLE_ID"])}
 for _device_id, _device in DEVICES.items():
     logger.info("Listening to {} device_id".format(_device_id))
     _device.listen()

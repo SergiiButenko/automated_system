@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 class Mosquitto:
     def __init__(self, on_message, on_connect, on_disconnect, topic):
-        broker_address = os.environ["MOSQUITTO_HOST"]
-        broker_portno = os.environ["MOSQUITTO_PORT"]
-        self.topic=topic
+        broker_address = str(os.environ["MOSQUITTO_HOST"])
+        broker_portno = int(os.environ["MOSQUITTO_PORT"])
+        self.topic = topic
         self.client = mqtt.Client(topic)
 
         logger.info("Connecting to mqtt broker")
