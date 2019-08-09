@@ -1,7 +1,7 @@
 import logging
 from flask import Flask, request
 
-from device_shadow.models import Device
+from models import Device
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

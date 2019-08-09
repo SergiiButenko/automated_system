@@ -5,8 +5,8 @@ import logging
 import os
 import time
 
-from localworker.models.line import Line
-from localworker.resources import Db, MQTT
+from celery_worker.models.line import Line
+from celery_worker.resources import Db, MQTT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

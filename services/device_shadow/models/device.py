@@ -3,7 +3,7 @@
 # like a SQLAlchemy instance.
 import logging
 
-from device_shadow.resources import Db, Mosquitto
+from resources import Db, Mosquitto
 
 
 logging.basicConfig(level=logging.INFO)

@@ -1,60 +1,82 @@
 version: '3.7'
 services:
-#  postgres_local:
-#    image: "postgres:11.2-alpine"
-#    container_name: postgres_local
-#    environment:
-#      POSTGRES_USER: ${DB_USERNAME}
-#      POSTGRES_PASSWORD: ${DB_PASSWORD}
-#      PGDATA: /data/postgres
-#    volumes:
-#      - ./services/postgres_local/:/docker-entrypoint-initdb.d
-#    #       - postgres-data:/data/postgres
-#    ports:
-#      - 5433:5432
-#    restart: unless-stopped
-
-  postgres-worker:
+  web:
     build:
-      context: services/postgres-worker
-    container_name: postgres-worker
+      context: ./services/web
+    container_name: web
+    environment:
+      POSTGRES_CONN: "server=localhost;user=$POSTGRES_USER"
     env_file:
       - ./.env
-    command: python -m app
-    restart: unless-stopped
-
-  celery-worker:
-    build:
-      context: services/celery-worker
-    container_name: celery-worker
-    env_file:
-      - ./.env
-    command: celery -A app.CeleryApp worker --loglevel=info
-
-  device-shadow:
-    build:
-      context: services/device-shadow
-    container_name: device-shadow
     expose:
       - 5000
-    env_file:
-      - ./.env
-    command: ["device-shadow/wait-for-it.sh","${DB_HOST}:${DB_PORT}", "--",
+    volumes:
+      - ./configs/web.py:/app/web/config.py
+    command: ["web/wait-for-it.sh","${DB_HOST}:${DB_PORT}", "--",
               "/usr/local/bin/gunicorn", "--worker-class", "eventlet",
-              "device-shadow.app:app", "-w", "1", "-t", "90", "-b", "0.0.0.0:5000"
+              "web.app:app", "-w", "1", "-t", "90", "-b", "0.0.0.0:5000"
     ]
 
-  mosquitto:
-    container_name: mosquitto
-    image: eclipse-mosquitto
+  frontend:
+    build:
+      context: ./services/frontend
+    container_name: frontend
+    depends_on:
+      - web
     expose:
-      - 1883
-      - 9001
+      - 8008
+    command: sh -c "yarn build && yarn start-prod"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
     ports:
-      - 1883:1883
-      - 9001:9001
+      - 80:80
     volumes:
-      - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./configs/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./services/frontend/app/404.html:/etc/nginx/404.html
+      - ./services/frontend/app/404.html:/usr/share/nginx/html/404.html
+    depends_on:
+      - web
+      - frontend
+
+  redis:
+    image: redis:5.0.3-alpine
+    container_name: redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - 6379:6379
+    restart: always
+    command: redis-server --appendonly yes
+
+  postgres:
+    image: "postgres:11.2-alpine"
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /data/postgres
+    volumes:
+      - ./services/postgres/:/docker-entrypoint-initdb.d
+#       - postgres-data:/data/postgres
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+
+#  mongo-db:
+#    image: mongo:3.6
+#    hostname: mongo-db
+#    container_name: db-mongo
+#    expose:
+#      - "27017"
+#    ports:
+#      - "27017:27017"
+#    networks:
+#      - backend
+#    command: --bind_ip_all --smallfiles
+#    volumes:
+#      - mongo-data:/data
 
 volumes:
   redis_data:

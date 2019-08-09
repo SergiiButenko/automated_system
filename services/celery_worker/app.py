@@ -7,9 +7,9 @@ CeleryApp = Celery(
     os.environ["CONSOLE_ID"],
     backend=os.environ["REDIS_BROKER"],
     broker=os.environ["REDIS_BROKER"],
-    include=[
-        "get_device_status",
-    ],
+    # include=[
+    #     "get_device_status",
+    # ],
 )
 
 

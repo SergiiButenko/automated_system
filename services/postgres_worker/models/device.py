@@ -5,8 +5,8 @@ import logging
 import os
 import time
 
-from localworker.models.line import Line
-from localworker.resources import Db, MQTT
+from models.line import Line
+from resources import Db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
