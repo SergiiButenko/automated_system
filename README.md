@@ -1,1 +1,1 @@
-# automated_systed
+# automated_system
