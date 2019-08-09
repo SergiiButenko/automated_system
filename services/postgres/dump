@@ -1,0 +1,356 @@
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+    -- USER SECTION ---
+
+    -- here placed all possible permissions
+    CREATE TABLE public.permission (
+        name text NOT NULL PRIMARY KEY,
+        description text
+    );
+    INSERT INTO public.permission(name, description) VALUES ('create_line', 'Ability to add lines for user');
+    INSERT INTO public.permission(name, description) VALUES ('read_line', 'Ability to read lines for user');
+    INSERT INTO public.permission(name, description) VALUES ('update_line', 'Ability to update lines for user');
+    INSERT INTO public.permission(name, description) VALUES ('delete_line', 'Ability to delete lines for user');
+    INSERT INTO public.permission(name, description) VALUES ('create_device', 'Ability to add devices for user');
+    INSERT INTO public.permission(name, description) VALUES ('read_device', 'Ability to read devices for user');
+    INSERT INTO public.permission(name, description) VALUES ('update_device', 'Ability to update devices for user');
+    INSERT INTO public.permission(name, description) VALUES ('delete_device', 'Ability to delete devices for user');
+
+    -- here placed all possible roles
+    CREATE TABLE public.roles (
+        name TEXT NOT NULL PRIMARY KEY,
+        description TEXT
+    );
+    INSERT INTO public.roles(name, description) VALUES ('user', 'Read only user');
+    INSERT INTO public.roles(name, description) VALUES ('advanced', 'User with ability to modify settings');
+    INSERT INTO public.roles(name, description) VALUES ('admin', 'User with ability to create devices');
+
+    -- Concatination of role and permissions
+    CREATE TABLE public.role_permissions (
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        role_name TEXT NOT NULL,
+        permission_name TEXT NOT NULL,
+        FOREIGN KEY(permission_name) REFERENCES permission(name),
+        FOREIGN KEY(role_name) REFERENCES roles(name)
+    );
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'create_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'read_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'update_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'delete_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'create_device');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'read_device');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'update_device');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('admin', 'delete_device');
+
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('advanced', 'read_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('advanced', 'update_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('advanced', 'read_device');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('advanced', 'update_device');
+
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('user', 'read_line');
+    INSERT INTO public.role_permissions (role_name, permission_name) VALUES ('user', 'read_device');
+
+    CREATE TABLE public.users (
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        email text NOT NULL,
+        name text NOT NULL,
+        password text NOT NULL
+    );
+    INSERT INTO public.users(id, email, name, password) VALUES ('3c545eb5-6cc0-47f7-a129-da0a41b856e3', 'butenko2003@ukr.net', 'admin', '$2b$12$WdbdI4b/oZifO4LbbfwtQ.C3iHNOyJP1lvuxVH6fnbUgxQrFJqlfy');
+    INSERT INTO public.users(id, email, name, password) VALUES ('56743837-89c9-46dc-a455-09f16fa1f9fd', 'butenko2003@ukr.net', 'user', '$2b$12$WdbdI4b/oZifO4LbbfwtQ.C3iHNOyJP1lvuxVH6fnbUgxQrFJqlfy');
+    INSERT INTO public.users(id, email, name, password) VALUES ('9e1aa40b-7d3d-4207-9705-39a5393edaab', 'butenko2003@ukr.net', 'advanced','$2b$12$WdbdI4b/oZifO4LbbfwtQ.C3iHNOyJP1lvuxVH6fnbUgxQrFJqlfy');
+
+
+
+
+
+    --- device SECTION ---
+    CREATE TABLE public.devices(
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        name text NOT NULL,
+        description text,
+        console uuid,
+        type text NOT NULL,
+        device_type text NOT NULL,
+        model text NOT NULL,
+        version text NOT NULL,
+        FOREIGN KEY (console) REFERENCES devices(id)
+    );
+
+    CREATE TABLE public.device_parameters(
+        name text NOT NULL PRIMARY KEY,
+        description text NOT NULL
+    );
+    INSERT INTO public.device_parameters(name, description) VALUES('comm_protocol', 'Тип радіо канала датчика: IP, Radio');
+    INSERT INTO public.device_parameters(name, description) VALUES('ip', 'Адреса девайса');
+    INSERT INTO public.device_parameters(name, description) VALUES('relay_quantity', 'Кількість реле');
+
+
+    CREATE TABLE public.device_settings(
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        device_id uuid NOT NULL,
+        setting TEXT NOT NULL,
+        value TEXT NOT NULL,
+        FOREIGN KEY (device_id) REFERENCES devices(id),
+        FOREIGN KEY (setting) REFERENCES device_parameters(name)
+    );
+
+    INSERT INTO public.devices(id, name, description, type, device_type, model, version) VALUES (
+        'a1106ae2-b537-45c8-acb6-aca85dcee675',
+        'Перегонівка Хаб',
+        'Центральна консоль',
+        'actuator',
+        'console',
+        'rasbpery_pi',
+        '0.1'
+        );
+
+    INSERT INTO public.devices(id, name, description, console, type, device_type, model, version) VALUES (
+        'c66f67ec-84b1-484f-842f-5624415c5841',
+        'Полив',
+        'Контроллер поливу огорода',
+        'a1106ae2-b537-45c8-acb6-aca85dcee675',
+        'actuator',
+        'relay',
+        'NO',
+        '0.1');
+    INSERT INTO public.device_settings (device_id, setting, value) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', 'comm_protocol', 'network');
+    INSERT INTO public.device_settings (device_id, setting, value) VALUES (
+    'c66f67ec-84b1-484f-842f-5624415c5841', 'ip', 'http://192.168.1.4/30000/');
+    INSERT INTO public.device_settings (device_id, setting, value) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', 'relay_quantity', '16');
+
+    INSERT INTO public.devices(id, name, description, console, type, device_type, model, version) VALUES (
+        '75308265-98aa-428b-aff6-a13beb5a3129',
+        'Верхня бочка',
+        'Контроллер заповнення',
+        'a1106ae2-b537-45c8-acb6-aca85dcee675',
+        'actuator',
+        'fill',
+        'NC',
+        '0.1');
+    INSERT INTO public.device_settings (device_id, setting, value) VALUES ('75308265-98aa-428b-aff6-a13beb5a3129', 'comm_protocol', 'network');
+    INSERT INTO public.device_settings (device_id, setting, value) VALUES (
+    '75308265-98aa-428b-aff6-a13beb5a3129', 'ip', 'http://192.168.1.4/30000/');
+    INSERT INTO public.device_settings (device_id, setting, value) VALUES (
+    '75308265-98aa-428b-aff6-a13beb5a3129', 'relay_quantity', '16');
+
+
+    CREATE TABLE public.device_user(
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        device_id uuid NOT NULL,
+        user_id uuid NOT NULL,
+        FOREIGN KEY (device_id) REFERENCES devices(id),
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
+    INSERT INTO public.device_user (device_id, user_id) VALUES ('a1106ae2-b537-45c8-acb6-aca85dcee675', '3c545eb5-6cc0-47f7-a129-da0a41b856e3');
+    INSERT INTO public.device_user (device_id, user_id) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', '3c545eb5-6cc0-47f7-a129-da0a41b856e3');
+    INSERT INTO public.device_user (device_id, user_id) VALUES ('75308265-98aa-428b-aff6-a13beb5a3129', '3c545eb5-6cc0-47f7-a129-da0a41b856e3');
+
+    CREATE TABLE public.groups (
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        name text NOT NULL,
+        description text
+    );
+    INSERT INTO public.groups(id, name, description) VALUES ('80122551-18bc-4846-9799-0b728324251c', 'Огород', 'Все, що смачне');
+
+    CREATE TABLE public.device_groups (
+        id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        device_id uuid NOT NULL,
+        group_id uuid NOT NULL,
+        FOREIGN KEY(device_id) REFERENCES devices(id),
+        FOREIGN KEY(group_id) REFERENCES groups(id)
+    );
+    INSERT INTO public.device_groups(device_id, group_id) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', '80122551-18bc-4846-9799-0b728324251c');
+
+
+
+
+
+
+-- RULES SECTION ---
+
+CREATE TABLE public.actions (
+    name text NOT NULL PRIMARY KEY,
+    description text
+);
+INSERT INTO public.actions(name, description) VALUES ('ON', 'Увімкнути актуатор');
+INSERT INTO public.actions(name, description) VALUES ('OFF', 'Вимкнути актуатор');
+
+
+CREATE TABLE public.rules (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    action text NOT NULL,
+    prioriy INT NOT NULL DEFAULT 0,
+    notify BOOL NOT NULL DEFAULT 'false',
+    sensor_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+    condition text NOT NULL,
+    variable text NOT NULL,
+    operator text NOT NULL,
+    value text NOT NULL,
+    FOREIGN KEY (action) REFERENCES actions(name),
+    FOREIGN KEY(device_id) REFERENCES devices(id),
+    FOREIGN KEY(sensor_id) REFERENCES devices(id)
+);
+
+
+
+-- IRRIGATION SECTION ---
+
+CREATE TABLE public.line_state (
+    name text NOT NULL PRIMARY KEY,
+    description text NOT NULL
+);
+INSERT INTO public.line_state VALUES ('activated', 'Включено');
+INSERT INTO public.line_state VALUES ('deactivated', 'Вимкнуто');
+
+
+CREATE TABLE public.lines (      
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name text NOT NULL,
+    description text,
+    relay_num int NOT NULL DEFAULT 0,
+    state text NOT NULL,
+    FOREIGN KEY (state) REFERENCES line_state(name)
+);
+
+CREATE TABLE public.line_parameters (
+    name text NOT NULL PRIMARY KEY,
+    description text NOT NULL
+);
+INSERT INTO public.line_parameters(name, description) VALUES('irrigation_modes', 'Режими полива');
+INSERT INTO public.line_parameters(name, description) VALUES('type', 'Тип лінії.');
+
+
+CREATE TABLE public.line_settings (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    line_id uuid NOT NULL,
+    setting TEXT NOT NULL,
+    value TEXT NOT NULL,
+    FOREIGN KEY (line_id) REFERENCES lines(id),
+    FOREIGN KEY (setting) REFERENCES line_parameters(name)
+);
+
+CREATE TABLE public.line_sensor (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    line_id uuid NOT NULL,
+    sensor_id uuid NOT NULL,
+    FOREIGN KEY (line_id) REFERENCES lines(id),
+    FOREIGN KEY (sensor_id) REFERENCES devices(id)
+);
+
+CREATE TABLE public.line_start_before (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    line_id uuid NOT NULL,
+    device_id_start_before uuid NOT NULL,
+    line_id_start_before uuid NOT NULL,
+    order_num INT DEFAULT 0 NOT NULL,
+    timeout INT DEFAULT 0 NOT NULL,
+    FOREIGN KEY (line_id) REFERENCES lines(id),
+    FOREIGN KEY (device_id_start_before) REFERENCES devices(id),
+    FOREIGN KEY (line_id_start_before) REFERENCES lines(id)
+);
+
+CREATE TABLE public.line_device (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    line_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+    FOREIGN KEY(device_id) REFERENCES devices(id),
+    FOREIGN KEY(line_id) REFERENCES lines(id)
+);
+
+CREATE TABLE public.allowed_status_for_line (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    line_id uuid NOT NULL,
+    allowed_status name NOT NULL,
+    FOREIGN KEY(line_id) REFERENCES lines(id),
+    FOREIGN KEY(allowed_status) REFERENCES line_state(name)
+);
+
+
+INSERT INTO public.lines(id, name, state, relay_num) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'Полуниця клумба', 'deactivated', 0);
+INSERT INTO public.line_settings (line_id, setting, value) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'type', 'irrigation');
+INSERT INTO public.allowed_status_for_line (line_id, allowed_status) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'activated');
+INSERT INTO public.allowed_status_for_line (line_id, allowed_status) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'deactivated');
+
+INSERT INTO public.line_settings (line_id, setting, value) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'irrigation_modes',
+    '{"irrigation_low": {"operation_time_wait": 0, "operation_execution_time": 10, "operation_intervals": 1}},
+     {"irrigation_mid": {"operation_time_wait": 0, "operation_execution_time": 10, "operation_intervals": 1}},
+     {"irrigation_high": {"operation_time_wait": 0, "operation_execution_time": 10, "operation_intervals": 1}}'
+    );
+INSERT INTO public.line_device (line_id, device_id) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'c66f67ec-84b1-484f-842f-5624415c5841');
+
+
+
+---job section---
+CREATE TABLE public.device_tasks (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    device_id uuid NOT NULL,
+    exec_time TIMESTAMPTZ DEFAULT NOW(),
+    type text NOT NULL DEFAULT 'onetime',
+    FOREIGN KEY(device_id) REFERENCES devices(id)
+);
+
+CREATE TABLE public.line_tasks (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    device_task_id uuid NOT NULL,
+    line_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+    exec_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    time INT NOT NULL,
+    iterations INT NOT NULL,
+    time_sleep INT NOT NULL,
+    FOREIGN KEY(device_task_id) REFERENCES device_tasks(id),
+    FOREIGN KEY(device_id) REFERENCES devices(id),
+    FOREIGN KEY(line_id) REFERENCES lines(id)
+);
+
+CREATE TABLE public.job_states (
+    name text NOT NULL PRIMARY KEY,
+    description text NOT NULL
+);
+INSERT INTO public.job_states VALUES('pending', 'Заплановано');
+INSERT INTO public.job_states VALUES('done', 'Виконано');
+INSERT INTO public.job_states VALUES('failed', 'Не виконано');
+INSERT INTO public.job_states VALUES('canceled', 'Скасовано');
+INSERT INTO public.job_states VALUES('canceled_rain', 'Скасовано через дощ');
+INSERT INTO public.job_states VALUES('canceled_humidity', 'Скасовано через вологість');
+INSERT INTO public.job_states VALUES('canceled_mistime', 'Скасовано через помилку з часом');
+
+CREATE TABLE public.jobs_queue(
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    line_task_id uuid NOT NULL,
+    line_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+    desired_device_state text NOT NULL,
+    exec_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    state text DEFAULT 'pending' NOT NULL,
+    FOREIGN KEY(line_task_id) REFERENCES line_tasks(id),
+    FOREIGN KEY(line_id) REFERENCES lines(id),
+    FOREIGN KEY(device_id) REFERENCES devices(id)
+);
+
+CREATE OR REPLACE FUNCTION notify_jobs_queue_change()
+RETURNS trigger AS $$
+DECLARE
+  queue_name text;
+BEGIN
+  SELECT d.console into queue_name from devices d where id = NEW.device_id;
+
+  PERFORM pg_notify(
+    queue_name,
+    json_build_object(
+      'operation', TG_OP,
+      'record', row_to_json(NEW)
+    )::text
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER jobs_queue_changed
+AFTER INSERT OR UPDATE OR DELETE
+ON jobs_queue
+FOR EACH ROW
+EXECUTE PROCEDURE notify_jobs_queue_change();

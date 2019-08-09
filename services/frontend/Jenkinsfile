@@ -1,0 +1,89 @@
+node ('docker-build') {
+//    cleanWs()
+    checkout scm
+
+    def last_commit = getLastCommit()
+    notifyStarted(last_commit)
+
+    def project = 'cosmosdx'
+    def appName = 'frontend'
+    def yarnEnv = 'DEV'
+    def s3Env = 'devtest'
+
+    if (env.BRANCH_NAME == 'master'){
+	yarnEnv = 'PRODUCTION'
+	s3Env = 'prod'
+    }
+    if (env.BRANCH_NAME == 'staging'){
+	yarnEnv = 'PRODUCTION'
+	s3Env = 'prod'
+    }
+    if (env.BRANCH_NAME == 'qa'){
+	yarnEnv = 'QA'
+	s3Env = 'qa'
+    }
+    if (env.BRANCH_NAME == 'uat'){
+	yarnEnv = 'UAT'
+	s3Env = 'uat'
+    }
+    if (env.BRANCH_NAME == 'dev'){
+    yarnEnv = 'DEV'
+    s3Env = 'dev'
+    }
+
+    stage ("Build project") {
+	sh("yarn && yarn build --env.ENV=${yarnEnv} --env.PATCH_VERSION=${env.BUILD_NUMBER}")
+    }
+
+    stage ("Running tests") {
+        echo "Running unit tests..."
+        try {
+            sh("yarn test-ci")
+        }
+        catch(all) {
+            notifyUnitTestsfailed(last_commit)
+            currentBuild.result = 'UNSTABLE'
+        }
+        finally {
+            junit 'junit.xml'
+        }
+    }
+
+    stage ("Deploy project") {
+	echo "Specified S3 environment is: ${s3Env}"
+	if (s3Env == 'qa' || s3Env == 'uat' || s3Env == 'dev' || s3Env == 'prod') {
+	    sh("aws s3 sync dist/ s3://cosmosdx-${s3Env}-frontend/ --delete")
+	    notifyBuildDeployed(last_commit)
+	} else {
+	    echo 'Branch name was not set within appropriate scope! Will not deploy anything to S3'
+	    notifyWontBeDeployed()
+	}
+    }
+}
+
+def notifyStarted(String author) {
+    // send to Slack
+    slackSend (message: "Build started: '${env.JOB_NAME}' ${env.BUILD_URL} \nGit info: ${author}")
+}
+
+def notifyUnitTestsfailed(String author) {
+    // send to Slack
+    slackSend (color: 'danger', message: "Unit Tests step failed: '${env.JOB_NAME}' ${env.BUILD_URL} \nGit info: ${author}")
+}
+
+def notifyBuildDeployed(String author) {
+    // send to Slack
+    slackSend (color: 'good', message: "Build deployed: '${env.JOB_NAME}' ${env.BUILD_URL} \nGit info: ${author}")
+}
+
+def notifyWontBeDeployed() {
+    // send to Slack
+    slackSend (color: 'good', message: "Build completed. Won't be deployed: '${env.JOB_NAME}' ${env.BUILD_URL}")
+}
+
+def String getLastCommit(){
+    return sh(
+	script: "git log -1 --pretty='Last commit. Author - %an; Message: - %B'",
+	returnStdout: true
+    ).trim()
+}

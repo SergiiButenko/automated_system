@@ -1,0 +1,62 @@
+version: '3.7'
+services:
+#  postgres_local:
+#    image: "postgres:11.2-alpine"
+#    container_name: postgres_local
+#    environment:
+#      POSTGRES_USER: ${DB_USERNAME}
+#      POSTGRES_PASSWORD: ${DB_PASSWORD}
+#      PGDATA: /data/postgres
+#    volumes:
+#      - ./services/postgres_local/:/docker-entrypoint-initdb.d
+#    #       - postgres-data:/data/postgres
+#    ports:
+#      - 5433:5432
+#    restart: unless-stopped
+
+  postgres-worker:
+    build:
+      context: services/postgres-worker
+    container_name: postgres-worker
+    env_file:
+      - ./.env
+    command: python -m app
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: services/celery-worker
+    container_name: celery-worker
+    env_file:
+      - ./.env
+    command: celery -A app.CeleryApp worker --loglevel=info
+
+  device-shadow:
+    build:
+      context: services/device-shadow
+    container_name: device-shadow
+    expose:
+      - 5000
+    env_file:
+      - ./.env
+    command: ["device-shadow/wait-for-it.sh","${DB_HOST}:${DB_PORT}", "--",
+              "/usr/local/bin/gunicorn", "--worker-class", "eventlet",
+              "device-shadow.app:app", "-w", "1", "-t", "90", "-b", "0.0.0.0:5000"
+    ]
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    expose:
+      - 1883
+      - 9001
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+volumes:
+  redis_data:
+  postgres-data:
+  #mongo-data:
