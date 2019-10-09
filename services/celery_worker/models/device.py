@@ -25,7 +25,7 @@ class Device:
                     group by d.id
                     """
 
-        device = Db.execute(q, {'device_id': device_id}, method='fetchone')
+        device = Db.execute(q, {"device_id": device_id}, method="fetchone")
         if device is None:
             raise Exception("No device_id '{}' found".format(device_id))
 
@@ -47,9 +47,11 @@ class Device:
                 select line_id from line_device where device_id = %(device_id)s
             ) {line}
             group by l.id
-        """.format(line=line)
+        """.format(
+            line=line
+        )
 
-        return Db.execute(query=q, params={'device_id': device_id}, method='fetchall')
+        return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
 
     def __init__(
         self,
@@ -86,7 +88,7 @@ class Device:
 
         lines = dict()
         for rec in records:
-            lines[rec['id']] = Line(**rec)
+            lines[rec["id"]] = Line(**rec)
         self.__lines = lines
 
         return self.__lines
@@ -100,16 +102,24 @@ class Device:
             pass
         elif self.settings["comm_protocol"] == "network":
             logger.info("Sending get status: to device_id '{}'".format(self.id))
-            MQTT.send_message(topic="{}/state".format(self.id), payload=dict(action='get_state'))
+            MQTT.send_message(
+                topic="{}/state".format(self.id), payload=dict(action="get_state")
+            )
 
     @state.setter
     def state(self, desired_state):
         if self.settings["comm_protocol"] == "radio":
             pass
         elif self.settings["comm_protocol"] == "network":
-            logger.info("Sending new status: '{}' to device_id '{}'".format(desired_state, self.id))
-            MQTT.send_message(topic="{}/state".format(self.id),
-                              payload=dict(action='set_state', desired_state=desired_state))
+            logger.info(
+                "Sending new status: '{}' to device_id '{}'".format(
+                    desired_state, self.id
+                )
+            )
+            MQTT.send_message(
+                topic="{}/state".format(self.id),
+                payload=dict(action="set_state", desired_state=desired_state),
+            )
 
     def to_json(self):
         return {

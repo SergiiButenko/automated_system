@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class LineTask:
     """Compose set of tasks according to iterations and time_sleep"""
+
     def __init__(
         self,
         exec_time,
@@ -58,10 +59,8 @@ class LineTask:
                     line_id=self.line_id,
                     device_id=self.device_id,
                     desired_device_state=json.dumps(
-                        {'state': {
-                                  'relay': {'num': self.relay_num, 'state': 1}
-                                  }
-                        }),
+                        {"state": {"relay": {"num": self.relay_num, "state": 1}}}
+                    ),
                     exec_time=exec_time,
                 )
             )
@@ -71,10 +70,8 @@ class LineTask:
                     line_id=self.line_id,
                     device_id=self.device_id,
                     desired_device_state=json.dumps(
-                        {'state': {
-                                  'relay': {'num': self.relay_num, 'state': 0}
-                                  }
-                        }),
+                        {"state": {"relay": {"num": self.relay_num, "state": 0}}}
+                    ),
                     exec_time=exec_time + timedelta(minutes=self.time),
                 )
             )
@@ -93,14 +90,19 @@ class LineTask:
                VALUES (%(line_id)s, %(device_task_id)s, %(device_id)s, %(exec_time)s, %(time)s, %(iterations)s, %(time_sleep)s)
                RETURNING id
                """
-        self.id = Db.execute(query=q, params={'line_id': self.line_id,
-                                              'device_task_id': self.device_task_id,
-                                              'device_id': self.device_id,
-                                              'exec_time': self.exec_time,
-                                              'time': self.time,
-                                              'iterations': self.iterations,
-                                              'time_sleep': self.time_sleep,
-                                              }, method='fetchone')[0]
+        self.id = Db.execute(
+            query=q,
+            params={
+                "line_id": self.line_id,
+                "device_task_id": self.device_task_id,
+                "device_id": self.device_id,
+                "exec_time": self.exec_time,
+                "time": self.time,
+                "iterations": self.iterations,
+                "time_sleep": self.time_sleep,
+            },
+            method="fetchone",
+        )[0]
         logger.info("Registered line task id {}".format(self.id))
 
         for job in self.jobs:

@@ -2,6 +2,7 @@
 # a JWT from. In practice, this will likely be something
 # like a SQLAlchemy instance.
 import logging
+import json
 
 from resources import Db, Mosquitto
 
@@ -23,7 +24,7 @@ class Device:
             group by d.id
             """
 
-        records = Db.execute(q, {'console': console_id}, method='fetchall')
+        records = Db.execute(q, {"console": console_id}, method="fetchall")
         devices = list()
 
         if len(records) == 0:
@@ -36,19 +37,6 @@ class Device:
         devices.sort(key=lambda e: e.name)
 
         return devices
-
-    @staticmethod
-    def _on_connect(userdata, flags, rc):
-        logger.info("Connected With Result Code {}".format(rc))
-
-    @staticmethod
-    def _on_disconnect(userdata, rc):
-        logger.info("Disconnected From Broker")
-
-    @staticmethod
-    def _on_message(userdata, message):
-        logger.info(message.payload.decode())
-        logger.info(message.topic)
 
     def __init__(
         self,
@@ -74,12 +62,6 @@ class Device:
         self.console = console
 
         self.__state = None
-        self.mqtt = Mosquitto(
-            on_message=Device._on_message,
-            on_connect=Device._on_connect,
-            on_disconnect=Device._on_disconnect,
-            topic=id
-        )
 
     @property
     def state(self):
@@ -92,10 +74,17 @@ class Device:
         # send request to websocket
 
     def request_state(self):
-        return self.mqtt.send_message(topic="{}/state".format(self.id), payload=dict(action='get_state'))
+        logger.info("sending message, topic: {}; message: {}".format(self.id, json.dumps(dict(action="get_state"))))
+        r = Mosquitto.send_message(
+            topic=self.id, payload=json.dumps(dict(action="get_state"))
+        )
 
-    def listen(self):
-        self.mqtt.listen()
+        logger.info(r)
+
+        return True
+
+    def subscribe(self):
+        Mosquitto.subscribe(self.id)
 
     def to_json(self):
         return {

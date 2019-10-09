@@ -36,12 +36,14 @@ services:
       context: services/device_shadow
     container_name: device-shadow
     expose:
-      - 5000
+      - 80
+    ports:
+      - 7777:80
     env_file:
       - ./.env
     command: ["./wait-for-it.sh","${DB_HOST}:${DB_PORT}", "--",
               "/usr/local/bin/gunicorn",
-              "app:app", "-w", "1", "-t", "90", "-b", "0.0.0.0:5000"
+              "app:app", "-w", "1", "-t", "90", "-b", "0.0.0.0:80"
     ]
 
   mosquitto:

@@ -7,9 +7,6 @@ CeleryApp = Celery(
     os.environ["CONSOLE_ID"],
     backend=os.environ["REDIS_BROKER"],
     broker=os.environ["REDIS_BROKER"],
-    # include=[
-    #     "get_device_status",
-    # ],
 )
 
 
@@ -22,5 +19,5 @@ def get_device_status(device_id):
     return json.dumps({"test": device_id})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     CeleryApp.start()

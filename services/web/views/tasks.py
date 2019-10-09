@@ -31,7 +31,9 @@ def get_all_tasks(date_start, date_end):
     return "OK"
 
 
-@tasks.route("/<string:device_id>/<string:date_start>/<string:date_end>", methods=["GET"])
+@tasks.route(
+    "/<string:device_id>/<string:date_start>/<string:date_end>", methods=["GET"]
+)
 @jwt_required
 def get_rules_for_device(device_id):
     cr_user = get_jwt_identity()
@@ -39,6 +41,6 @@ def get_rules_for_device(device_id):
     # to check device exists
     Device.get_by_id(device_id=device_id, user_identity=cr_user)
 
-    tasks = Task.get_next_task_by_device_id(device_id=device_id)
+    tasks = DeviceTask.get_next_task_by_device_id(device_id=device_id)
 
     return jsonify(tasks=tasks)

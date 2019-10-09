@@ -21,8 +21,12 @@ class DeviceTask:
                 where lt.device_task_id = %(device_task_id)s
                 group by dt.id
                       """
-        device_task = Db.execute(query=q, params={'device_task_id': device_task_id}, method='fetchone')
-        device_task['line_tasks'] = map(lambda x: LineTask(**x), device_task['line_tasks'])
+        device_task = Db.execute(
+            query=q, params={"device_task_id": device_task_id}, method="fetchone"
+        )
+        device_task["line_tasks"] = map(
+            lambda x: LineTask(**x), device_task["line_tasks"]
+        )
 
         return DeviceTask(**device_task)
 
@@ -38,8 +42,12 @@ class DeviceTask:
                 GROUP BY dt.id
                 LIMIT 1
         """
-        device_task = Db.execute(query=q, params={'device_id': device_id}, method='fetchone')
-        device_task['line_tasks'] = map(lambda x: LineTask(**x), device_task['line_tasks'])
+        device_task = Db.execute(
+            query=q, params={"device_id": device_id}, method="fetchone"
+        )
+        device_task["line_tasks"] = map(
+            lambda x: LineTask(**x), device_task["line_tasks"]
+        )
 
         return DeviceTask(**device_task)
 
@@ -50,30 +58,26 @@ class DeviceTask:
 
         line_tasks = list()
         for line_to_plan in lines:
-            line = device.lines[line_to_plan['line_id']]
-            task = LineTask(exec_time=exec_time,
-                            device_id=device_id,
-                            device_task_id=-1,
-                            time=line_to_plan['time'],
-                            iterations=line_to_plan['iterations'],
-                            time_sleep=line_to_plan['time_sleep'],
-                            relay_num=line.relay_num,
-                            line_id=line_to_plan['line_id'],
-                            )
+            line = device.lines[line_to_plan["line_id"]]
+            task = LineTask(
+                exec_time=exec_time,
+                device_id=device_id,
+                device_task_id=-1,
+                time=line_to_plan["time"],
+                iterations=line_to_plan["iterations"],
+                time_sleep=line_to_plan["time_sleep"],
+                relay_num=line.relay_num,
+                line_id=line_to_plan["line_id"],
+            )
 
             exec_time = task.next_rule_start_time
             line_tasks.append(task)
 
-        return DeviceTask(device_id=device_id, line_tasks=line_tasks, exec_time=exec_time)
+        return DeviceTask(
+            device_id=device_id, line_tasks=line_tasks, exec_time=exec_time
+        )
 
-    def __init__(
-        self,
-        device_id,
-        line_tasks,
-        exec_time,
-        id=-1,
-        type='onetime',
-    ):
+    def __init__(self, device_id, line_tasks, exec_time, id=-1, type="onetime"):
         self.device_id = device_id
         self.line_tasks = line_tasks
         self.exec_time = exec_time
@@ -86,7 +90,9 @@ class DeviceTask:
                VALUES (%(device_id)s)
                RETURNING id
                """
-        self.id = Db.execute(query=q, params={'device_id': self.device_id}, method='fetchone')[0]
+        self.id = Db.execute(
+            query=q, params={"device_id": self.device_id}, method="fetchone"
+        )[0]
 
         for line_task in self.line_tasks:
             line_task.device_task_id = self.id
@@ -95,10 +101,6 @@ class DeviceTask:
         return self
 
     def to_json(self):
-        return dict(
-            id=self.id,
-            device_id=self.device_id,
-            line_tasks=self.line_tasks,
-        )
+        return dict(id=self.id, device_id=self.device_id, line_tasks=self.line_tasks)
 
     serialize = to_json

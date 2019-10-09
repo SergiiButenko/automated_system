@@ -1,3 +1,5 @@
+from helpers import retry
+
 import logging
 import os
 
@@ -9,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Database:
+    @retry(psycopg2.OperationalError, delay=15, logger=logger)
     def __init__(self):
         self.conn = psycopg2.connect(
             host=os.environ["DB_HOST_LOCAL"],
@@ -26,10 +29,7 @@ class Database:
 
     def execute(self, query, params={}, method=None):
         try:
-            self.cursor.execute(
-                query,
-                params,
-            )
+            self.cursor.execute(query, params)
 
             records = None
             if method is not None:
@@ -37,7 +37,10 @@ class Database:
 
             return records
         except (Exception, psycopg2.DatabaseError) as error:
-            logger.error("Error in transaction Reverting all other operations of a transaction ", error)
+            logger.error(
+                "Error in transaction Reverting all other operations of a transaction ",
+                error,
+            )
             self.conn.rollback()
             raise error
 

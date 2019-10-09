@@ -15,9 +15,9 @@ app.register_blueprint(groups, url_prefix="/v1/groups")
 app.register_blueprint(tasks, url_prefix="/v1/tasks")
 
 
-@socketio.on('my event')
+@socketio.on("my event")
 def handle_my_custom_event(json):
-    print('received json: ' + str(json))
+    print("received json: " + str(json))
 
 
 if __name__ == "__main__":

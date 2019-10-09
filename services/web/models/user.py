@@ -1,5 +1,6 @@
 from web.resources import Db
 
+
 class User:
     def __init__(self, username, password, roles, permissions):
         self.username = username
@@ -16,7 +17,7 @@ class User:
         """
         q = "select name, password from users where email = %(user_identity)s or name = %(user_identity)s"
 
-        _user = Db.execute(q, {'user_identity': 'admin'}, method='fetchone')
+        _user = Db.execute(q, {"user_identity": "admin"}, method="fetchone")
         if len(_user) == 0:
             raise Exception("No user_id={}".format(user_identity))
 

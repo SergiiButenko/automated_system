@@ -43,9 +43,14 @@ def create_flask_app(name):
 
     app = handle_common_errors(app)
 
-    socketio = SocketIO(app, async_mode="eventlet", engineio_logger=False, message_queue=os.environ["REDIS_BROKER"])
-    logging.getLogger('socketio').setLevel(logging.ERROR)
-    logging.getLogger('engineio').setLevel(logging.ERROR)
+    socketio = SocketIO(
+        app,
+        async_mode="eventlet",
+        engineio_logger=False,
+        message_queue=os.environ["REDIS_BROKER"],
+    )
+    logging.getLogger("socketio").setLevel(logging.ERROR)
+    logging.getLogger("engineio").setLevel(logging.ERROR)
 
     return app, socketio
 

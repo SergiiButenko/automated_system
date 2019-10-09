@@ -1,6 +1,3 @@
-# This is an example of a complex object that we could build
-# a JWT from. In practice, this will likely be something
-# like a SQLAlchemy instance.
 import logging
 
 from web.models.line import Line
@@ -23,7 +20,7 @@ class Device:
                     group by d.id
                     """
 
-        device = Db.execute(q, {'device_id': device_id}, method='fetchone')
+        device = Db.execute(q, {"device_id": device_id}, method="fetchone")
         if device is None:
             raise Exception("No device_id '{}' found".format(device_id))
 
@@ -47,7 +44,7 @@ class Device:
                     group by d.id
                     """
 
-        records = Db.execute(q, {'user_identity': user_identity}, method='fetchall')
+        records = Db.execute(q, {"user_identity": user_identity}, method="fetchall")
         devices = list()
 
         if len(records) == 0:
@@ -77,9 +74,11 @@ class Device:
                 select line_id from line_device where device_id = %(device_id)s
             ) {line}
             group by l.id
-        """.format(line=line)
+        """.format(
+            line=line
+        )
 
-        return Db.execute(query=q, params={'device_id': device_id}, method='fetchall')
+        return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
 
     def __init__(
         self,
@@ -112,7 +111,7 @@ class Device:
 
         lines = dict()
         for rec in records:
-            lines[rec['id']] = Line(**rec)
+            lines[rec["id"]] = Line(**rec)
 
         return lines
 

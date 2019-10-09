@@ -17,7 +17,7 @@ class Group:
                        select * from groups where id = %(group_id)s
                         """
 
-        group = Db.execute(q, params={'group_id': group_id}, method="fetchone")
+        group = Db.execute(q, params={"group_id": group_id}, method="fetchone")
         if group is None:
             raise Exception("No group_id {} found".format(group_id))
 
@@ -38,7 +38,7 @@ class Group:
                         )
                         """
 
-        records = Db.execute(q, params={'user_identity': "admin"}, method="fetchall")
+        records = Db.execute(q, params={"user_identity": "admin"}, method="fetchall")
         groups = list()
 
         if len(records) == 0:
@@ -72,7 +72,7 @@ class Group:
                     )
                     group by d.id
                     """
-        records = Db.execute(q, {'group_id': self.id}, method='fetchall')
+        records = Db.execute(q, {"group_id": self.id}, method="fetchall")
         if len(records) == 0:
             logger.info("No devices in group_id '{}'".format(self.id))
             return self

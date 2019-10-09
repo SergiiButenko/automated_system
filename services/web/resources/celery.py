@@ -7,10 +7,7 @@ CeleryApp = Celery(
     os.environ["CONSOLE_ID"],
     backend=os.environ["REDIS_BROKER"],
     broker=os.environ["REDIS_BROKER"],
-    include=[
-        "set_device_status",
-        "get_device_status",
-    ],
+    include=["set_device_status", "get_device_status"],
 )
 
 
@@ -31,5 +28,6 @@ def set_device_status(device_id):
     print("long time task finished")
     return json.dumps({"test": device_id})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     CeleryApp.start()

@@ -27,7 +27,7 @@ class Line:
                     LIMIT 1
                     """
 
-        record = Db.execute(query=q, params={"line_id": self.id}, method='fetchone')
+        record = Db.execute(query=q, params={"line_id": self.id}, method="fetchone")
 
         tasks = list()
         if record is None:

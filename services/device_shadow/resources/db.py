@@ -26,10 +26,7 @@ class Database:
 
     def execute(self, query, params={}, method=None):
         try:
-            self.cursor.execute(
-                query,
-                params,
-            )
+            self.cursor.execute(query, params)
 
             records = None
             if method is not None:
@@ -37,7 +34,10 @@ class Database:
 
             return records
         except (Exception, psycopg2.DatabaseError) as error:
-            logger.error("Error in transaction Reverting all other operations of a transaction ", error)
+            logger.error(
+                "Error in transaction Reverting all other operations of a transaction ",
+                error,
+            )
             self.conn.rollback()
             raise error
 

@@ -9,11 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 class Database:
-    conn_creds = dict(host=os.environ['DB_HOST'],
-                      port=os.environ['DB_PORT'],
-                      dbname=os.environ['DB_DATABASE'],
-                      user=os.environ['DB_USERNAME'],
-                      password=os.environ['DB_PASSWORD'])
+    conn_creds = dict(
+        host=os.environ["DB_HOST"],
+        port=os.environ["DB_PORT"],
+        dbname=os.environ["DB_DATABASE"],
+        user=os.environ["DB_USERNAME"],
+        password=os.environ["DB_PASSWORD"],
+    )
 
     def __init__(self):
         self.conn = psycopg2.connect(**Database.conn_creds)
@@ -26,10 +28,7 @@ class Database:
 
     def execute(self, query, params={}, method=None):
         try:
-            self.cursor.execute(
-                query,
-                params,
-            )
+            self.cursor.execute(query, params)
 
             records = None
             if method is not None:
@@ -39,7 +38,10 @@ class Database:
 
             return records
         except (Exception, psycopg2.DatabaseError) as error:
-            logger.error("Error in transaction Reverting all other operations of a transaction ", error)
+            logger.error(
+                "Error in transaction Reverting all other operations of a transaction ",
+                error,
+            )
             self.conn.rollback()
             raise error
 

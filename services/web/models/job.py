@@ -7,7 +7,16 @@ logger = logging.getLogger(__name__)
 
 
 class Job:
-    def __init__(self, line_task_id, line_id, device_id, desired_device_state, exec_time, state="", id=-1):
+    def __init__(
+        self,
+        line_task_id,
+        line_id,
+        device_id,
+        desired_device_state,
+        exec_time,
+        state="",
+        id=-1,
+    ):
         self.id = id
         self.line_task_id = line_task_id
         self.line_id = line_id
@@ -23,7 +32,7 @@ class Job:
                     VALUES (%(line_task_id)s, %(line_id)s, %(device_id)s, %(desired_device_state)s, %(exec_time)s)
                     RETURNING id
                     """
-        self.id = Db.execute(query=q, params=self.to_json(), method='fetchone')[0]
+        self.id = Db.execute(query=q, params=self.to_json(), method="fetchone")[0]
 
         return self
 

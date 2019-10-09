@@ -2,6 +2,7 @@
 # a JWT from. In practice, this will likely be something
 # like a SQLAlchemy instance.
 import logging
+import requests
 import os
 import time
 
@@ -25,7 +26,7 @@ class Device:
                     group by d.id
                     """
 
-        device = Db.execute(q, {'device_id': device_id}, method='fetchone')
+        device = Db.execute(q, {"device_id": device_id}, method="fetchone")
         if device is None:
             raise Exception("No device_id '{}' found".format(device_id))
 
@@ -47,9 +48,11 @@ class Device:
                 select line_id from line_device where device_id = %(device_id)s
             ) {line}
             group by l.id
-        """.format(line=line)
+        """.format(
+            line=line
+        )
 
-        return Db.execute(query=q, params={'device_id': device_id}, method='fetchall')
+        return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
 
     def __init__(
         self,
@@ -86,7 +89,7 @@ class Device:
 
         lines = dict()
         for rec in records:
-            lines[rec['id']] = Line(**rec)
+            lines[rec["id"]] = Line(**rec)
         self.__lines = lines
 
         return self.__lines
@@ -100,6 +103,10 @@ class Device:
             pass
         elif self.settings["comm_protocol"] == "network":
             logger.info("Sending get status: to device_id '{}'".format(self.id))
+            url = 'http://' + os.environ['DEVICE_SHADOW_HOST'] + '/' + self.id
+            r = requests.get(url=url)
+            r.raise_for_status()
+
             return True
 
     @state.setter
@@ -107,7 +114,16 @@ class Device:
         if self.settings["comm_protocol"] == "radio":
             pass
         elif self.settings["comm_protocol"] == "network":
-            logger.info("Sending new status: '{}' to device_id '{}'".format(desired_state, self.id))
+            logger.info(
+                "Sending new status: '{}' to device_id '{}'".format(
+                    desired_state, self.id
+                )
+            )
+            url = 'http://' + os.environ['DEVICE_SHADOW_HOST'] + '/' + self.id
+            r = requests.post(url=url, json=desired_state)
+            #r.raise_for_status()
+            logger.info(r.text)
+
             return True
 
     def to_json(self):
