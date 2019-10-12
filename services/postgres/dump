@@ -305,17 +305,17 @@ CREATE TABLE public.line_tasks (
     FOREIGN KEY(line_id) REFERENCES lines(id)
 );
 
-CREATE TABLE public.job_states (
+CREATE TABLE public.job_statuses (
     name text NOT NULL PRIMARY KEY,
     description text NOT NULL
 );
-INSERT INTO public.job_states VALUES('pending', 'Заплановано');
-INSERT INTO public.job_states VALUES('done', 'Виконано');
-INSERT INTO public.job_states VALUES('failed', 'Не виконано');
-INSERT INTO public.job_states VALUES('canceled', 'Скасовано');
-INSERT INTO public.job_states VALUES('canceled_rain', 'Скасовано через дощ');
-INSERT INTO public.job_states VALUES('canceled_humidity', 'Скасовано через вологість');
-INSERT INTO public.job_states VALUES('canceled_mistime', 'Скасовано через помилку з часом');
+INSERT INTO public.job_statuses VALUES('pending', 'Заплановано');
+INSERT INTO public.job_statuses VALUES('done', 'Виконано');
+INSERT INTO public.job_statuses VALUES('failed', 'Не виконано');
+INSERT INTO public.job_statuses VALUES('canceled', 'Скасовано');
+INSERT INTO public.job_statuses VALUES('canceled_rain', 'Скасовано через дощ');
+INSERT INTO public.job_statuses VALUES('canceled_humidity', 'Скасовано через вологість');
+INSERT INTO public.job_statuses VALUES('canceled_mistime', 'Скасовано через помилку з часом');
 
 CREATE TABLE public.jobs_queue(
     id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -324,10 +324,11 @@ CREATE TABLE public.jobs_queue(
     device_id uuid NOT NULL,
     desired_device_state text NOT NULL,
     exec_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    state text DEFAULT 'pending' NOT NULL,
+    status text DEFAULT 'pending' NOT NULL,
     FOREIGN KEY(line_task_id) REFERENCES line_tasks(id),
     FOREIGN KEY(line_id) REFERENCES lines(id),
-    FOREIGN KEY(device_id) REFERENCES devices(id)
+    FOREIGN KEY(device_id) REFERENCES devices(id),
+    FOREIGN KEY(status) REFERENCES job_statuses(name)
 );
 
 CREATE OR REPLACE FUNCTION notify_jobs_queue_change()
@@ -352,7 +353,7 @@ BEGIN
     queue_name,
     json_build_object(
       'operation', TG_OP,
-      'record', row_to_json(NEW),
+      'message', row_to_json(NEW),
 	  'active_jobs', active_jobs
     )::text
   );

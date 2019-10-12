@@ -18,6 +18,8 @@ services:
     build:
       context: services/postgres_worker
     container_name: postgres-worker
+    depends_on:
+      - device-shadow
     env_file:
       - ./.env
     command: python -m app

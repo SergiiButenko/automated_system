@@ -106,11 +106,17 @@ class Device:
             url = 'http://' + os.environ['DEVICE_SHADOW_HOST'] + '/' + self.id
             r = requests.get(url=url)
             r.raise_for_status()
-
-            return True
+            self.__state = r.to_json()['state']
+        
+        return self.__state
 
     @state.setter
     def state(self, desired_state):
+        msg = dict(
+            action='set_state',
+            **desired_state
+            )
+
         if self.settings["comm_protocol"] == "radio":
             pass
         elif self.settings["comm_protocol"] == "network":
@@ -120,11 +126,8 @@ class Device:
                 )
             )
             url = 'http://' + os.environ['DEVICE_SHADOW_HOST'] + '/' + self.id
-            r = requests.post(url=url, json=desired_state)
-            #r.raise_for_status()
-            logger.info(r.text)
-
-            return True
+            r = requests.post(url=url, json=msg)
+            r.raise_for_status()
 
     def to_json(self):
         return {

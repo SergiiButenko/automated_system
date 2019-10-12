@@ -86,8 +86,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
       Serial.print(relay);
       Serial.println(state);
-      int s = digitalRead(D6);
-      digitalWrite(D6, !s);   // Turn the LED on (Note that LOW is the voltage level
+      digitalWrite(D6, state);   // Turn the LED on (Note that LOW is the voltage level
     }
   }
 

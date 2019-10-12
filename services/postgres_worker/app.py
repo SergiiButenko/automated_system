@@ -1,56 +1,50 @@
 import json
 import logging
 import os
+import threading
+import schedule
+import time
+
 from datetime import datetime
 
 from resources.db import Db
 
 # from helpers.messages import send_message
-from models.device import Device
+from models import MsgAnalyzer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def send_message(message):
-    device = Device.get_by_id(message["device_id"])
-    device.state = dict(
-        action='set_state',
-        state=json.loads(message["desired_device_state"])['state'])
+def scheduler():
+    logger.info("GET ACTIVE JOBS")
+    get_active_jobs = """
+                    SELECT id, line_task_id, line_id, device_id, desired_device_state, exec_time, state
+                    FROM (
+                    SELECT
+                        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY exec_time desc) AS r,
+                        t.*
+                    FROM
+                        jobs_queue t) x
+                    WHERE
+                    x.r <= 1;"""
 
+    messages = Db.execute(query=get_active_jobs, method="fetchall")
+    logger.info(messages)
+    logger.info("GOT ACTIVE JOBS")
 
-def loop():
-    # Initial job execution
-    get_last_completed_jobs = """ SELECT line_task_id,
-                     line_id,
-                     device_id,
-                     desired_device_state,
-                     exec_time
-                     FROM jobs_queue
-                     WHERE state = 'completed'
-                     AND exec_time <= now()
-                     ORDER BY exec_time DESC"""
+    for _message in messages:
+        msg = MsgAnalyzer(**_message)
+        msg.analyze_and_exec()
 
-    queue = Db.execute(query=get_last_completed_jobs, method="fetchall")
-    for message in queue:
-        send_message(message)
+    
+def scheduler_super_task():
+    schedule.every().minute.do(scheduler)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
-    get_active_jobs = """ SELECT line_task_id,
-                     line_id,
-                     device_id,
-                     desired_device_state,
-                     exec_time
-                     FROM jobs_queue
-                     WHERE state = 'pending'
-                     AND exec_time >= now() - INTERVAL '1 HOUR'
-                     AND exec_time <= now()
-                     ORDER BY exec_time DESC"""
-
-    queue = Db.execute(query=get_active_jobs, method="fetchall")
-    for message in queue:
-        send_message(message)
-
-    # start listening
+def listener():
     Db.execute(query='LISTEN "{}";'.format(os.environ["CONSOLE_ID"]))
     logger.info(
         'Waiting for notifications on channel "{}";'.format(os.environ["CONSOLE_ID"])
@@ -67,14 +61,34 @@ def loop():
             payload = json.loads(notify.payload)
             operation = payload["operation"]
             message = payload["record"]
-            # parse time
-            message["exec_time"] = message["exec_time"]
-
-            logger.info("message {}".format(message))
 
             if operation in ["INSERT", "UPDATE"]:
-                send_message(message)
+                msg = MsgAnalyzer(**message)
+                msg.analyze_and_exec()
 
+
+def main():
+    # Set all device to last status
+    get_last_completed_jobs = """ SELECT *
+                     FROM jobs_queue
+                     WHERE state != 'completed'
+                     AND exec_time <= now()
+                     ORDER BY exec_time DESC"""
+
+    messages = Db.execute(query=get_last_completed_jobs, method="fetchall")
+    for _message in messages:
+        msg = MsgAnalyzer(**_message)
+        msg.analyze_and_exec()
+    
+    l = threading.Thread(target=listener, daemon=True)
+    l.start()
+    s = threading.Thread(target=scheduler_super_task, daemon=True)
+    s.start()
+    
+    l.join()
+    s.join()
+    
+    
 
 if __name__ == "__main__":
-    loop()
+    main()
