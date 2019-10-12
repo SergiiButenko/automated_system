@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 def send_message(message):
     device = Device.get_by_id(message["device_id"])
-    device.state = dict(desired_state=message["desired_device_state"])
+    device.state = dict(
+        action='set_state',
+        state=json.loads(message["desired_device_state"])['state'])
 
 
 def loop():

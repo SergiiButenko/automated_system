@@ -71,17 +71,17 @@ class Device:
     @state.setter
     def state(self, state):
         self.__state = state
+        logger.info("sending message, topic: {}; message: {}".format(self.id, json.dumps(state)))
+        Mosquitto.send_message(
+            topic=self.id, payload=json.dumps(state)
+        )
         # send request to websocket
 
     def request_state(self):
         logger.info("sending message, topic: {}; message: {}".format(self.id, json.dumps(dict(action="get_state"))))
-        r = Mosquitto.send_message(
+        Mosquitto.send_message(
             topic=self.id, payload=json.dumps(dict(action="get_state"))
         )
-
-        logger.info(r)
-
-        return True
 
     def subscribe(self):
         Mosquitto.subscribe(self.id)
