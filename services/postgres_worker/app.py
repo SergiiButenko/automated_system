@@ -37,12 +37,13 @@ def scheduler():
         msg = MsgAnalyzer(**_message)
         msg.analyze_and_exec()
 
-    
+
 def scheduler_super_task():
     schedule.every().minute.do(scheduler)
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 def listener():
     Db.execute(query='LISTEN "{}";'.format(os.environ["CONSOLE_ID"]))
@@ -79,16 +80,15 @@ def main():
     for _message in messages:
         msg = MsgAnalyzer(**_message)
         msg.analyze_and_exec()
-    
+
     l = threading.Thread(target=listener, daemon=True)
     l.start()
     s = threading.Thread(target=scheduler_super_task, daemon=True)
     s.start()
-    
+
     l.join()
     s.join()
-    
-    
+
 
 if __name__ == "__main__":
     main()

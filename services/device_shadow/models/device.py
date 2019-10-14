@@ -37,6 +37,28 @@ class Device:
         devices.sort(key=lambda e: e.name)
 
         return devices
+    
+    @staticmethod
+    def _get_device_lines(device_id, line_id):
+        line = ""
+        if line_id is not None:
+            line = " and line_id = '{line_id}'".format(line_id=line_id)
+
+        q = """
+            select
+            l.*,
+            jsonb_object_agg(setting, value) as settings
+            from line_settings as s
+            join lines as l on s.line_id = l.id
+            where l.id in (
+                select line_id from line_device where device_id = %(device_id)s
+            ) {line}
+            group by l.id
+        """.format(
+            line=line
+        )
+
+        return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
 
     def __init__(
         self,
@@ -60,8 +82,24 @@ class Device:
         self.version = version
         self.settings = settings
         self.console = console
+        self.lines = self._init_lines()
+        
 
-        self.__state = None
+        self.__state = dict()
+        for i in range(0, int(self.settings['relay_quantity'])):
+            _state = dict(relay_num=i, state=-1)
+            self.__state[i] = _state
+        
+
+    def _init_lines(self):
+        records = Device._get_device_lines(device_id=self.id, line_id=None)
+
+        lines = dict()
+        for rec in records:
+            lines[rec["id"]] = Line(**rec)
+
+        return lines
+            
 
     @property
     def state(self):
@@ -70,18 +108,19 @@ class Device:
 
     @state.setter
     def state(self, state):
-        self.__state = state
-        logger.info("sending message, topic: {}; message: {}".format(self.id, json.dumps(state)))
-        Mosquitto.send_message(
-            topic=self.id, payload=json.dumps(state)
-        )
+        msg = dict(action="set_state", device_id=self.id, **state)
+
+        self.__state[state['relay_num']] = state
+
+        logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
+        Mosquitto.send_message(topic=self.id, payload=msg)
         # send request to websocket
 
     def request_state(self):
-        logger.info("sending message, topic: {}; message: {}".format(self.id, json.dumps(dict(action="get_state"))))
-        Mosquitto.send_message(
-            topic=self.id, payload=json.dumps(dict(action="get_state"))
-        )
+        msg = dict(action="get_state", device_id=self.id)
+
+        logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
+        Mosquitto.send_message(topic=self.id, payload=msg)
 
     def subscribe(self):
         Mosquitto.subscribe(self.id)

@@ -35,7 +35,7 @@ DynamicJsonDocument doc(capacity);
 const char* ssid = "NotebookNet";
 const char* password = "0660101327";
 const char* mqtt_server = "192.168.1.199";
-const char* deviceId = "c66f67ec-84b1-484f-842f-5624415c5841";
+const char* device_id = "c66f67ec-84b1-484f-842f-5624415c5841";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -86,7 +86,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
       Serial.print(relay);
       Serial.println(state);
-      digitalWrite(D6, state);   // Turn the LED on (Note that LOW is the voltage level
+      digitalWrite(D6, state);
+    }
+    if (doc["action"] == "get_state") {
+      DynamicJsonDocument doc(1024);
+      doc["device_id"] = device_id;
+      
+      doc["state"] = [111111111111111111]
+
+      client.publish(deviceId, "{\"state\":[11111111]}");
     }
   }
 
@@ -96,17 +104,14 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "75308265-98aa-428b-aff6-a13beb5a3129";
-
     //clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(device_id.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish(deviceId, "hello world");
+      client.publish(device_id, "hello world");
       // ... and resubscribe
-      client.subscribe(deviceId);
+      client.subscribe(device_id);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -139,6 +144,6 @@ void loop() {
     snprintf (msg, 75, "hello world #%ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish(deviceId, msg);
+    client.publish(device_id, msg);
   }
 }

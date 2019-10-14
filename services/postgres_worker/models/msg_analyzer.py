@@ -5,22 +5,27 @@ from models import Device
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class MsgAnalyzer():
-    allowed_statuses = ['pending', 'failed']
+
+class MsgAnalyzer:
+    allowed_statuses = ["pending", "failed"]
     allowed_delta = 10
-    
+
     @staticmethod
     def strptime(time_str):
         time_str = time_str[:19]
-        dt = datetime.datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
+        dt = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
         return dt
 
-    def __init__(self, id, line_task_id,
-                        line_id,
-                        device_id,
-                        desired_device_state,
-                        exec_time,
-                        state):
+    def __init__(
+        self,
+        id,
+        line_task_id,
+        line_id,
+        device_id,
+        desired_device_state,
+        exec_time,
+        state,
+    ):
         self.line_task_id = line_task_id
         self.line_id = line_id
         self.device_id = device_id
@@ -35,11 +40,11 @@ class MsgAnalyzer():
 
     def _update(self):
         pass
-    
+
     def analyze_conditions(self, force=False):
         if self.status in MsgAnalyzer.allowed_statuses:
             return True
-        
+
         return False
 
     def analyze_time(self):
@@ -53,7 +58,7 @@ class MsgAnalyzer():
         if force is True:
             logger.info("Force sending message")
             self._set_device_state()
-        
+
         if self.analyze() is True:
             logger.info("Applied rules allow execution")
             self._set_device_state()
