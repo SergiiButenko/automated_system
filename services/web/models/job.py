@@ -1,4 +1,4 @@
-from web.resources import Db
+from resources import Db
 
 import logging
 

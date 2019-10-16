@@ -1,4 +1,4 @@
-from web.models import Device
+from models import Device
 from flask import jsonify, request, Blueprint
 
 from flask_jwt_extended import get_jwt_identity

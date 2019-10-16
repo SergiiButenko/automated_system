@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from web.models.line_task import LineTask
-from web.models.device import Device
-from web.resources import Db
+from models.line_task import LineTask
+from models.device import Device
+from resources import Db
 
 import logging
 

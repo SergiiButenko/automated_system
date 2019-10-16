@@ -1,7 +1,7 @@
 import logging
 
-from web.models.line import Line
-from web.resources import Db
+from models.line import Line
+from resources import Db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

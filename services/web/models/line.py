@@ -1,5 +1,5 @@
-from web.models.line_task import LineTask
-from web.resources import Db
+from models.line_task import LineTask
+from resources import Db
 
 import logging
 

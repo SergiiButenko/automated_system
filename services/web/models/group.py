@@ -1,8 +1,8 @@
 # This is an example of a complex object that we could build
 # a JWT from. In practice, this will likely be something
 # like a SQLAlchemy instance.
-from web.models import Device
-from web.resources import Db
+from models import Device
+from resources import Db
 
 import logging
 

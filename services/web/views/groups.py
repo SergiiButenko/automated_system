@@ -1,4 +1,4 @@
-from web.models import Group
+from models import Group
 from flask import Blueprint
 from flask import jsonify
 

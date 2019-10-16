@@ -1,4 +1,4 @@
-from web.errors.general_error import GeneralError
+from errors.general_error import GeneralError
 
 
 class NoJson(GeneralError):

@@ -1,4 +1,4 @@
-from web.models import DeviceTask
+from models import DeviceTask, Device
 from flask import jsonify, request, Blueprint
 
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -26,7 +26,7 @@ def set_rules_for_device(device_id):
 
 @tasks.route("/<string:device_id>", methods=["DELETE"])
 # @jwt_required
-def set_rules_for_device(device_id):
+def delete_rules_for_device(device_id):
     cr_user = get_jwt_identity()
 
     income_json = request.json

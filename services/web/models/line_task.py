@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from web.models.job import Job
-from web.resources import Db
+from models.job import Job
+from resources import Db
 
 import logging
 import json
