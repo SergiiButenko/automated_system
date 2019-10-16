@@ -30,6 +30,7 @@ class LineTask:
         self.device_id = device_id
         self.device_task_id = device_task_id
         self.exec_time = exec_time
+        self.expire_time = None
         self.time = time
         self.iterations = iterations
         self.time_sleep = time_sleep
@@ -58,10 +59,11 @@ class LineTask:
                     line_task_id=self.id,
                     line_id=self.line_id,
                     device_id=self.device_id,
-                    desired_device_state=json.dumps(
-                        {"state": {"relay": {"num": self.relay_num, "state": 1}}}
+                    desired_state=json.dumps(
+                        {"relay": {"num": self.relay_num, "state": 1}}
                     ),
                     exec_time=exec_time,
+                    expire_time=exec_time + timedelta(minutes=1),
                 )
             )
             jobs.append(
@@ -69,13 +71,16 @@ class LineTask:
                     line_task_id=self.id,
                     line_id=self.line_id,
                     device_id=self.device_id,
-                    desired_device_state=json.dumps(
-                        {"state": {"relay": {"num": self.relay_num, "state": 0}}}
+                    desired_state=json.dumps(
+                        {"relay": {"num": self.relay_num, "state": 0}}
                     ),
                     exec_time=exec_time + timedelta(minutes=self.time),
+                    expire_time=exec_time + timedelta(minutes=1),
+
                 )
             )
             exec_time = exec_time + timedelta(minutes=self.time_sleep)
+            self.expire_time = exec_time + timedelta(minutes=self.time_sleep)
 
         self.jobs = jobs
 
@@ -86,8 +91,8 @@ class LineTask:
         self.generate_jobs()
 
         q = """
-               INSERT INTO line_tasks(line_id, device_task_id, device_id, exec_time, time, iterations, time_sleep)
-               VALUES (%(line_id)s, %(device_task_id)s, %(device_id)s, %(exec_time)s, %(time)s, %(iterations)s, %(time_sleep)s)
+               INSERT INTO line_tasks(line_id, device_task_id, device_id, exec_time, expire_time, time, iterations, time_sleep)
+               VALUES (%(line_id)s, %(device_task_id)s, %(device_id)s, %(exec_time)s, %(expire_time)s, %(time)s, %(iterations)s, %(time_sleep)s)
                RETURNING id
                """
         self.id = Db.execute(
@@ -97,6 +102,7 @@ class LineTask:
                 "device_task_id": self.device_task_id,
                 "device_id": self.device_id,
                 "exec_time": self.exec_time,
+                "expire_time": self.expire_time,
                 "time": self.time,
                 "iterations": self.iterations,
                 "time_sleep": self.time_sleep,
@@ -118,6 +124,7 @@ class LineTask:
             device_task_id=self.device_task_id,
             device_id=self.device_id,
             exec_time=self.exec_time,
+            expire_time=self.expire_time,
             time=self.time,
             iterations=self.iterations,
             time_sleep=self.time_sleep,

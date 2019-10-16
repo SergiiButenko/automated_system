@@ -25,9 +25,9 @@ def scheduler():
                         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY exec_time desc) AS r,
                         t.*
                     FROM
-                        jobs_queue t) x
+                        jobs_queue t) jobs
                     WHERE
-                    x.r <= 1;"""
+                    jobs.r <= 1 and jobs.exec_time <= now();"""
 
     messages = Db.execute(query=get_active_jobs, method="fetchall")
     logger.info(messages)
@@ -83,12 +83,13 @@ def main():
 
     l = threading.Thread(target=listener, daemon=True)
     l.start()
+    l.join()
+
     s = threading.Thread(target=scheduler_super_task, daemon=True)
     s.start()
-
-    l.join()
     s.join()
 
+    # read about multipoc
 
 if __name__ == "__main__":
     main()

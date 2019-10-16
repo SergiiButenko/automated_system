@@ -5,7 +5,7 @@ import logging
 import json
 
 from resources import Db, Mosquitto
-
+from models import Line
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -82,14 +82,8 @@ class Device:
         self.version = version
         self.settings = settings
         self.console = console
+        self.state = None
         self.lines = self._init_lines()
-        
-
-        self.__state = dict()
-        for i in range(0, int(self.settings['relay_quantity'])):
-            _state = dict(relay_num=i, state=-1)
-            self.__state[i] = _state
-        
 
     def _init_lines(self):
         records = Device._get_device_lines(device_id=self.id, line_id=None)
@@ -99,28 +93,6 @@ class Device:
             lines[rec["id"]] = Line(**rec)
 
         return lines
-            
-
-    @property
-    def state(self):
-        self.request_state()
-        return self.__state
-
-    @state.setter
-    def state(self, state):
-        msg = dict(action="set_state", device_id=self.id, **state)
-
-        self.__state[state['relay_num']] = state
-
-        logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
-        Mosquitto.send_message(topic=self.id, payload=msg)
-        # send request to websocket
-
-    def request_state(self):
-        msg = dict(action="get_state", device_id=self.id)
-
-        logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
-        Mosquitto.send_message(topic=self.id, payload=msg)
 
     def subscribe(self):
         Mosquitto.subscribe(self.id)

@@ -29,17 +29,17 @@ class MsgAnalyzer:
         self.line_task_id = line_task_id
         self.line_id = line_id
         self.device_id = device_id
-        self.desired_device_state = json.loads(desired_device_state)
+        self.desired_state = json.loads(desired_device_state)
         # self.exec_time = MsgAnalyzer.strptime(exec_time)
         self.exec_time = exec_time
         self.status = state
 
-    def _set_device_state(self):
-        device = Device.get_by_id(self.device_id)
-        device.state = self.desired_device_state
-
     def _update(self):
         pass
+
+    def _exec(self):
+        device = Device.get_by_id(self.device_id)
+        device.lines[self.line_id].state = self.desired_state
 
     def analyze_conditions(self, force=False):
         if self.status in MsgAnalyzer.allowed_statuses:
@@ -57,11 +57,11 @@ class MsgAnalyzer:
     def analyze_and_exec(self, force=False):
         if force is True:
             logger.info("Force sending message")
-            self._set_device_state()
+            self._exec()
 
         if self.analyze() is True:
             logger.info("Applied rules allow execution")
-            self._set_device_state()
+            self._exec()
 
             return True
         else:

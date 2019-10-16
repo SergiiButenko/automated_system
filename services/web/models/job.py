@@ -12,8 +12,9 @@ class Job:
         line_task_id,
         line_id,
         device_id,
-        desired_device_state,
+        desired_state,
         exec_time,
+        expire_time,
         state="",
         id=-1,
     ):
@@ -21,15 +22,16 @@ class Job:
         self.line_task_id = line_task_id
         self.line_id = line_id
         self.device_id = device_id
-        self.desired_device_state = desired_device_state
+        self.desired_state = desired_state
         self.exec_time = exec_time
+        self.expire_time = expire_time
         self.state = state
 
     def register(self):
         q = """
                     INSERT INTO jobs_queue
-                    (line_task_id, line_id, device_id, desired_device_state, exec_time)
-                    VALUES (%(line_task_id)s, %(line_id)s, %(device_id)s, %(desired_device_state)s, %(exec_time)s)
+                    (line_task_id, line_id, device_id, desired_state, exec_time, expire_time)
+                    VALUES (%(line_task_id)s, %(line_id)s, %(device_id)s, %(desired_state)s, %(exec_time)s, %(expire_time)s)
                     RETURNING id
                     """
         self.id = Db.execute(query=q, params=self.to_json(), method="fetchone")[0]
@@ -42,8 +44,9 @@ class Job:
             line_task_id=self.line_task_id,
             line_id=self.line_id,
             device_id=self.device_id,
-            desired_device_state=self.desired_device_state,
+            desired_state=self.desired_state,
             exec_time=self.exec_time,
+            expire_time=self.expire_time,
             state=self.state,
         )
 

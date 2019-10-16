@@ -17,23 +17,27 @@ for _device_id, _device in DEVICES.items():
 app = Flask(__name__)
 
 
-@app.route("/<string:device_id>", methods=["GET"])
+@app.route("/<string:device_id>/lines", methods=["GET"])
 def get_state(device_id):
-    return DEVICES[device_id].state
+    return DEVICES[device_id].lines
+
+@app.route("/<string:device_id>/lines/<string:line_id>", methods=["GET"])
+def get_line_state(device_id, line_id):
+    return DEVICES[device_id].lines[line_id]
 
 
-@app.route("/<string:device_id>", methods=["POST"])
-def post_state(device_id):
+@app.route("/<string:device_id>/lines/<string:line_id>", methods=["PUT"])
+def post_state(device_id, line_id):
     data = request.get_json()
 
     logger.info("received json {}".format(data))
-    logger.info("current state {}".format(DEVICES[device_id].state))
+    logger.info("current state {}".format(DEVICES[device_id].lines[line_id].state))
 
-    DEVICES[device_id].state = data
+    DEVICES[device_id].lines[line_id].state = data
 
-    logger.info("new state {}".format(DEVICES[device_id].state))
+    logger.info("new state {}".format(DEVICES[device_id].lines[line_id].state))
 
-    return device_id
+    return DEVICES[device_id].lines[line_id]    
 
 
 if __name__ == "__main__":
