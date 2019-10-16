@@ -1,5 +1,5 @@
-from web.helpers.create_app import create_jwt_app, create_flask_app
-from web.views import auth, devices, groups, tasks
+from helpers import create_jwt_app, create_flask_app
+from views import auth, devices, groups, tasks
 import logging
 
 logging.basicConfig(level=logging.INFO)

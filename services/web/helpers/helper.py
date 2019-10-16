@@ -17,7 +17,8 @@ def send_message(channel, data):
         logger.error(e)
         logger.error("Can't send message. Exeption occured")
 
-def retry(exceptions, tries=4, delay=3, backoff=2, _logger=None):
+
+def retry(exceptions, tries=4, delay=3, backoff=2, logger=None):
     """
     Retry calling the decorated function using an exponential backoff.
 
@@ -28,7 +29,7 @@ def retry(exceptions, tries=4, delay=3, backoff=2, _logger=None):
         delay: Initial delay between retries in seconds.
         backoff: Backoff multiplier (e.g. value of 2 will double the delay
             each retry).
-        _logger: Logger to use. If None, print.
+        logger: Logger to use. If None, print.
     """
 
     def deco_retry(f):
@@ -40,8 +41,8 @@ def retry(exceptions, tries=4, delay=3, backoff=2, _logger=None):
                     return f(*args, **kwargs)
                 except exceptions as e:
                     msg = "{}, Retrying in {} seconds...".format(e, mdelay)
-                    if _logger:
-                        _logger.warning(msg)
+                    if logger:
+                        logger.warning(msg)
                     else:
                         print(msg)
                     time.sleep(mdelay)

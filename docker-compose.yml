@@ -12,7 +12,7 @@ services:
       - 5000
     volumes:
       - ./configs/web.py:/app/web/config.py
-    command: /usr/local/bin/gunicorn --worker-clas eventlet web.app:app -w 1 -t 90 -b 0.0.0.0:5000
+    command: /usr/local/bin/gunicorn --worker-clas eventlet app:app -w 1 -t 90 -b 0.0.0.0:5000
 
   frontend:
     build:

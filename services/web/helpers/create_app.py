@@ -5,11 +5,11 @@ from flask_socketio import SocketIO
 
 from werkzeug.exceptions import BadRequest
 
-from web.resources import redis, Db
 
-from web.models import *
-from web.errors import *
-from web.errors.errors_handler import handle_common_errors
+from resources import redis, Db
+from models import *
+from errors import *
+from errors.errors_handler import handle_common_errors
 
 import logging
 import os
