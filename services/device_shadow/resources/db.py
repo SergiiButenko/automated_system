@@ -3,12 +3,14 @@ import os
 
 import psycopg2
 import psycopg2.extras
+from helpers import retry
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class Database:
+    @retry(psycopg2.OperationalError, delay=15, logger=logger)
     def __init__(self):
         self.conn = psycopg2.connect(
             host=os.environ["DB_HOST_LOCAL"],

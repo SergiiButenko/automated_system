@@ -5,7 +5,7 @@ import logging
 import json
 
 from resources import Db, Mosquitto
-from models import Line
+from .line import Line
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

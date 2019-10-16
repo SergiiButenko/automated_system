@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def scheduler():
     logger.info("GET ACTIVE JOBS")
     get_active_jobs = """
-                    SELECT id, line_task_id, line_id, device_id, desired_device_state, exec_time, state
+                    SELECT id, line_task_id, line_id, device_id, desired_state, exec_time, status
                     FROM (
                     SELECT
                         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY exec_time desc) AS r,
@@ -72,7 +72,7 @@ def main():
     # Set all device to last status
     get_last_completed_jobs = """ SELECT *
                      FROM jobs_queue
-                     WHERE state != 'completed'
+                     WHERE status != 'completed'
                      AND exec_time <= now()
                      ORDER BY exec_time DESC"""
 
