@@ -117,6 +117,12 @@ class LineTask:
             logger.info("Registered job id {}".format(job.id))
 
         return self
+    
+    def cancel(self):
+        for job in self.jobs:
+            job.cancel()
+        
+        pass
 
     def to_json(self):
         return dict(

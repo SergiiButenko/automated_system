@@ -24,6 +24,19 @@ def set_rules_for_device(device_id):
     return jsonify(tasks=device_task)
 
 
+@tasks.route("/<string:device_id>", methods=["DELETE"])
+# @jwt_required
+def set_rules_for_device(device_id):
+    cr_user = get_jwt_identity()
+
+    income_json = request.json
+
+    device_task = DeviceTask.get_by_id(device_task_id=income_json["lines"])
+    device_task = device_task.cancel()
+
+    return "OK"
+
+
 @tasks.route("/<string:date_start>/<string:date_end>", methods=["GET"])
 # @jwt_required
 def get_all_tasks(date_start, date_end):

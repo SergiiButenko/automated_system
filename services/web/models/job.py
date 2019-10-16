@@ -38,6 +38,9 @@ class Job:
 
         return self
 
+    def cancel(self):
+        pass
+
     def to_json(self):
         return dict(
             id=self.id,

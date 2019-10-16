@@ -100,6 +100,12 @@ class DeviceTask:
 
         return self
 
+    def cancel(self):
+        for line_task in self.line_tasks:
+            line_task.cancel()
+        
+        pass
+
     def to_json(self):
         return dict(id=self.id, device_id=self.device_id, line_tasks=self.line_tasks)
 

@@ -1,5 +1,5 @@
 from web.models import Device
-from flask import jsonify, Blueprint
+from flask import jsonify, request, Blueprint
 
 from flask_jwt_extended import get_jwt_identity
 
@@ -21,5 +21,16 @@ def devices_lines_route():
 
 @devices.route("/<string:device_id>", methods=["GET"])
 # @jwt_required
-def devices_lines_by_id_route(device_id=None):
+def devices_lines_by_id_route(device_id):
     return jsonify(devices=[Device.get_by_id(device_id=device_id)])
+
+
+@devices.route("/<string:device_id>/lines/<string:line_id>", methods=["PUT"])
+# @jwt_required
+def devices_by_id_lines_by_id_route(device_id, line_id):
+    income_json = request.json
+
+    device = Device.get_by_id(device_id=device_id)
+    line_state = device.lines[line_id].state = income_json['desired_state']
+
+    return jsonify(line_state=line_state)
