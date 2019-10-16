@@ -8,9 +8,7 @@ services:
     environment:
       FLASK_DEBUG: 1
       FLASK_ENV: "development"
-    command: ["web/wait-for-it.sh","${DB_HOST}:${DB_PORT}",
-              "--",
-              "python", "-m", "web.app"]
+    command: python -m web.app
 
   frontend:
     volumes:

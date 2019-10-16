@@ -197,12 +197,12 @@ CREATE TABLE public.rules (
 
 -- IRRIGATION SECTION ---
 
-CREATE TABLE public.line_state (
+CREATE TABLE public.line_status (
     name text NOT NULL PRIMARY KEY,
     description text NOT NULL
 );
-INSERT INTO public.line_state VALUES ('activated', 'Включено');
-INSERT INTO public.line_state VALUES ('deactivated', 'Вимкнуто');
+INSERT INTO public.line_status VALUES ('activated', 'Включено');
+INSERT INTO public.line_status VALUES ('deactivated', 'Вимкнуто');
 
 
 CREATE TABLE public.lines (      
@@ -210,8 +210,8 @@ CREATE TABLE public.lines (
     name text NOT NULL,
     description text,
     relay_num int NOT NULL DEFAULT 0,
-    state text NOT NULL,
-    FOREIGN KEY (state) REFERENCES line_state(name)
+    status text NOT NULL,
+    FOREIGN KEY (status) REFERENCES line_status(name)
 );
 
 CREATE TABLE public.line_parameters (

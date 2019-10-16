@@ -6,13 +6,14 @@ logger = logging.getLogger(__name__)
 
 
 class Line:
-    def __init__(self, id, device_id, name, description, relay_num, settings):
+    def __init__(self, id, device_id, name, description, relay_num, settings, status):
         self.id = id
         self.device_id = device_id
         self.name = name
         self.description = description
         self.settings = settings
         self.relay_num = relay_num
+        self.status = status
 
         self.__state = None
 
@@ -46,6 +47,7 @@ class Line:
             "settings": self.settings,
             "relay_num": self.relay_num,
             "state": self.__state,
+            "status": self.status,
         }
 
     serialize = to_json

@@ -25,7 +25,7 @@ class Database:
         self.conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
     def __del__(self):
-        self.conn.close()
+        self.conn is not None and self.conn.close()
 
     def execute(self, query, params={}, method=None):
         try:
