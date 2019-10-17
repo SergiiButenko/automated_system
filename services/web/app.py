@@ -1,5 +1,5 @@
 from helpers import create_jwt_app, create_flask_app
-from views import auth, devices, groups, tasks
+from views import auth, devices, groups, tasks, healthcheck
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -13,6 +13,7 @@ app.register_blueprint(devices, url_prefix="/v1/devices")
 app.register_blueprint(auth, url_prefix="/v1/auth")
 app.register_blueprint(groups, url_prefix="/v1/groups")
 app.register_blueprint(tasks, url_prefix="/v1/tasks")
+app.register_blueprint(healthcheck, url_prefix="/v1/healthcheck")
 
 
 @socketio.on("my event")

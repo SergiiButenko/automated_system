@@ -4,6 +4,8 @@ services:
     build:
       context: ./services/web
     container_name: web
+    depends_on:
+      - postgres
     environment:
       POSTGRES_CONN: "server=localhost;user=$POSTGRES_USER"
     env_file:
@@ -13,6 +15,12 @@ services:
     volumes:
       - ./configs/web.py:/app/web/config.py
     command: /usr/local/bin/gunicorn --worker-clas eventlet app:app -w 1 -t 90 -b 0.0.0.0:5000
+    healthcheck:
+        test: ["CMD", "curl", "--fail", "http://localhost:5000/api/helthcheck"]
+        interval: 1m30s
+        timeout: 10s
+        retries: 3
+
 
   frontend:
     build:
@@ -23,6 +31,11 @@ services:
     expose:
       - 8008
     command: sh -c "yarn build && yarn start-prod"
+    healthcheck:
+        test: ["CMD", "curl", "--fail", "http://localhost:8008"]
+        interval: 1m30s
+        timeout: 10s
+        retries: 3
 
   nginx:
     image: nginx:latest
@@ -46,6 +59,11 @@ services:
       - 6379:6379
     restart: always
     command: redis-server --appendonly yes
+    healthcheck:
+        test: ["CMD", "redis-cli","ping"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
 
   postgres:
     image: "postgres:11.2-alpine"
@@ -60,6 +78,11 @@ services:
     ports:
       - 5432:5432
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=${DB_USERNAME} --dbname=${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 #  mongo-db:
 #    image: mongo:3.6

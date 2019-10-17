@@ -239,18 +239,6 @@ CREATE TABLE public.line_sensor (
     FOREIGN KEY (sensor_id) REFERENCES devices(id)
 );
 
-CREATE TABLE public.line_start_before (
-    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    line_id uuid NOT NULL,
-    device_id_start_before uuid NOT NULL,
-    line_id_start_before uuid NOT NULL,
-    order_num INT DEFAULT 0 NOT NULL,
-    timeout INT DEFAULT 0 NOT NULL,
-    FOREIGN KEY (line_id) REFERENCES lines(id),
-    FOREIGN KEY (device_id_start_before) REFERENCES devices(id),
-    FOREIGN KEY (line_id_start_before) REFERENCES lines(id)
-);
-
 CREATE TABLE public.line_device (
     id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
     line_id uuid NOT NULL,
@@ -264,11 +252,11 @@ CREATE TABLE public.allowed_status_for_line (
     line_id uuid NOT NULL,
     allowed_status name NOT NULL,
     FOREIGN KEY(line_id) REFERENCES lines(id),
-    FOREIGN KEY(allowed_status) REFERENCES line_state(name)
+    FOREIGN KEY(allowed_status) REFERENCES line_status(name)
 );
 
 
-INSERT INTO public.lines(id, name, state, relay_num) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'Полуниця клумба', 'deactivated', 0);
+INSERT INTO public.lines(id, name, status, relay_num) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'Полуниця клумба', 'deactivated', 0);
 INSERT INTO public.line_settings (line_id, setting, value) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'type', 'irrigation');
 INSERT INTO public.allowed_status_for_line (line_id, allowed_status) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'activated');
 INSERT INTO public.allowed_status_for_line (line_id, allowed_status) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'deactivated');
