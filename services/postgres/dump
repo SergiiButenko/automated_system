@@ -284,6 +284,7 @@ CREATE TABLE public.line_tasks (
     device_task_id uuid NOT NULL,
     line_id uuid NOT NULL,
     device_id uuid NOT NULL,
+    status text DEFAULT 'pending' NOT NULL,
     exec_time TIMESTAMP WITH TIME ZONE NOT NULL,
     expire_time TIMESTAMP WITH TIME ZONE NOT NULL,
     time INT NOT NULL,

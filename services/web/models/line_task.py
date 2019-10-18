@@ -24,13 +24,16 @@ class LineTask:
         time_sleep,
         relay_num=-1,
         id=-1,
+        expire_time = None,
+        status = 'pending'
     ):
         self.id = id  # will be set after register into database
         self.line_id = line_id
         self.device_id = device_id
         self.device_task_id = device_task_id
         self.exec_time = exec_time
-        self.expire_time = None
+        self.expire_time = expire_time
+        self.status = status
         self.time = time
         self.iterations = iterations
         self.time_sleep = time_sleep
@@ -80,7 +83,7 @@ class LineTask:
                 )
             )
             exec_time = exec_time + timedelta(minutes=self.time_sleep)
-            self.expire_time = exec_time + timedelta(minutes=self.time_sleep)
+            self.expire_time = exec_time + timedelta(minutes=1)
 
         self.jobs = jobs
 

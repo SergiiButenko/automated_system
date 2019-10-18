@@ -15,3 +15,4 @@ RUN pip install -r requirements.txt
 ENV PYTHONPATH="$PYTHONPATH:/app"
 
 COPY . /app
+HEALTHCHECK --interval=5m --timeout=10s --retries=3 CMD curl -f http://localhost:5000/api/helthcheck/ || exit 1

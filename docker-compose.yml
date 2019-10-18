@@ -16,7 +16,7 @@ services:
       - ./configs/web.py:/app/web/config.py
     command: /usr/local/bin/gunicorn --worker-clas eventlet app:app -w 1 -t 90 -b 0.0.0.0:5000
     healthcheck:
-        test: ["CMD", "curl", "--fail", "http://localhost:5000/api/helthcheck"]
+        test: ["CMD", "curl", "--fail", "http://localhost:5000/api/helthcheck/"]
         interval: 1m30s
         timeout: 10s
         retries: 3

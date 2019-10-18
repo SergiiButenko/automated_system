@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class Database:
     @retry(psycopg2.OperationalError, delay=15, logger=logger)
     def __init__(self):
+        self.conn = None
         self.conn = psycopg2.connect(
             host=os.environ["DB_HOST_LOCAL"],
             port=os.environ["DB_PORT_LOCAL"],

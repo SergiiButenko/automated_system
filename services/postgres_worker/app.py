@@ -27,7 +27,7 @@ def scheduler():
                     FROM
                         jobs_queue t) jobs
                     WHERE
-                    jobs.r <= 1 and jobs.exec_time <= now();"""
+                    jobs.r <= 1 and jobs.expire_time >= now() and status = 'pending';"""
 
     messages = Db.execute(query=get_active_jobs, method="fetchall")
     logger.info(messages)
@@ -73,7 +73,7 @@ def main():
     get_last_completed_jobs = """ SELECT *
                      FROM jobs_queue
                      WHERE status != 'completed'
-                     AND exec_time <= now()
+                     AND expire_time <= now()
                      ORDER BY exec_time DESC"""
 
     messages = Db.execute(query=get_last_completed_jobs, method="fetchall")
