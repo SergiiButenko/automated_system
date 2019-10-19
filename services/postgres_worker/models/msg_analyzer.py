@@ -1,5 +1,5 @@
 import json, logging
-from datetime import datetime
+from datetime import datetime, timezone
 from models import Device
 
 logging.basicConfig(level=logging.INFO)
@@ -50,7 +50,9 @@ class MsgAnalyzer:
         return False
 
     def analyze_time(self):
-        logger.info(self.exec_time)
+        now = datetime.now(timezone.utc)
+        logger.info(self.expire_time > now)
+
         return True
 
     def analyze(self):

@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 def scheduler():
     logger.info("GET ACTIVE JOBS")
     get_active_jobs = """
-                    SELECT id, line_task_id, line_id, device_id, desired_state, exec_time, status
+                    SELECT id, line_task_id, line_id, device_id, desired_state, exec_time, expire_time, status
                     FROM (
                     SELECT
-                        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY exec_time desc) AS r,
+                        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY expire_time desc) AS r,
                         t.*
                     FROM
                         jobs_queue t) jobs
@@ -30,10 +30,10 @@ def scheduler():
                     jobs.r <= 1 and jobs.expire_time >= now() and status = 'pending';"""
 
     messages = Db.execute(query=get_active_jobs, method="fetchall")
-    logger.info(messages)
     logger.info("GOT ACTIVE JOBS")
 
     for _message in messages:
+        logger.info(_message)
         msg = MsgAnalyzer(**_message)
         msg.analyze_and_exec()
 
@@ -70,11 +70,16 @@ def listener():
 
 def main():
     # Set all device to last status
-    get_last_completed_jobs = """ SELECT *
-                     FROM jobs_queue
-                     WHERE status != 'completed'
-                     AND expire_time <= now()
-                     ORDER BY exec_time DESC"""
+    get_last_completed_jobs = """
+                    SELECT id, line_task_id, line_id, device_id, desired_state, exec_time, expire_time, status
+                    FROM (
+                    SELECT
+                        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY expire_time desc) AS r,
+                        t.*
+                    FROM
+                        jobs_queue t) jobs
+                    WHERE
+                    jobs.r <= 1 and jobs.expire_time <= now() and status = 'completed';"""
 
     messages = Db.execute(query=get_last_completed_jobs, method="fetchall")
     for _message in messages:
