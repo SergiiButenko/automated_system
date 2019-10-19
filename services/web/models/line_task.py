@@ -22,7 +22,6 @@ class LineTask:
         time,
         iterations,
         time_sleep,
-        relay_num=-1,
         id=-1,
         expire_time = None,
         status = 'pending'
@@ -37,7 +36,6 @@ class LineTask:
         self.time = time
         self.iterations = iterations
         self.time_sleep = time_sleep
-        self.relay_num = relay_num
 
         self.jobs = list()
 
@@ -62,9 +60,7 @@ class LineTask:
                     line_task_id=self.id,
                     line_id=self.line_id,
                     device_id=self.device_id,
-                    desired_state=json.dumps(
-                        {"relay": {"num": self.relay_num, "state": 1}}
-                    ),
+                    desired_state=1,
                     exec_time=exec_time,
                     expire_time=exec_time + timedelta(minutes=1),
                 )
@@ -74,9 +70,7 @@ class LineTask:
                     line_task_id=self.id,
                     line_id=self.line_id,
                     device_id=self.device_id,
-                    desired_state=json.dumps(
-                        {"relay": {"num": self.relay_num, "state": 0}}
-                    ),
+                    desired_state=0,
                     exec_time=exec_time + timedelta(minutes=self.time),
                     expire_time=exec_time + timedelta(minutes=1),
 

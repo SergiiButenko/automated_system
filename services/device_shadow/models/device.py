@@ -90,7 +90,8 @@ class Device:
 
         lines = dict()
         for rec in records:
-            lines[rec["id"]] = Line(**rec)
+            logger.info(rec["id"])
+            lines[rec["id"]] = Line(device_id=self.id, **rec)
 
         return lines
 

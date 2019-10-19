@@ -24,9 +24,10 @@ class Line:
 
     @state.setter
     def state(self, state):
-        msg = dict(action="set_state", device_id=self.device_id, state=state)
+        self.__state = state
 
-        self.__state = state['state']
+        new_state = dict(relay_num=self.relay_num, state=state)
+        msg = dict(action="set_state", device_id=self.device_id, state=new_state)
 
         logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
         Mosquitto.send_message(topic=self.device_id, payload=msg)

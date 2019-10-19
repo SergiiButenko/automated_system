@@ -54,11 +54,9 @@ class DeviceTask:
     @staticmethod
     def calculate(device_id, lines):
         exec_time = datetime.now()
-        device = Device.get_by_id(device_id=device_id)
 
         line_tasks = list()
         for line_to_plan in lines:
-            line = device.lines[line_to_plan["line_id"]]
             task = LineTask(
                 exec_time=exec_time,
                 device_id=device_id,
@@ -66,7 +64,6 @@ class DeviceTask:
                 time=line_to_plan["time"],
                 iterations=line_to_plan["iterations"],
                 time_sleep=line_to_plan["time_sleep"],
-                relay_num=line.relay_num,
                 line_id=line_to_plan["line_id"],
             )
 

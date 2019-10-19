@@ -22,16 +22,18 @@ class MsgAnalyzer:
         line_task_id,
         line_id,
         device_id,
-        desired_device_state,
+        desired_state,
         exec_time,
+        expire_time,
         status,
     ):
         self.line_task_id = line_task_id
         self.line_id = line_id
         self.device_id = device_id
-        self.desired_state = json.loads(desired_device_state)
+        self.desired_state = desired_state
         # self.exec_time = MsgAnalyzer.strptime(exec_time)
         self.exec_time = exec_time
+        self.expire_time = expire_time
         self.status = status
 
     def _update(self):

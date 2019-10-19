@@ -61,7 +61,7 @@ def listener():
 
             payload = json.loads(notify.payload)
             operation = payload["operation"]
-            message = payload["record"]
+            message = payload["message"]
 
             if operation in ["INSERT", "UPDATE"]:
                 msg = MsgAnalyzer(**message)

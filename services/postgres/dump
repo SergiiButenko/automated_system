@@ -326,26 +326,14 @@ CREATE OR REPLACE FUNCTION notify_jobs_queue_change()
 RETURNS trigger AS $$
 DECLARE
   queue_name text;
-  active_jobs text;
 BEGIN
   SELECT d.console into queue_name from devices d where id = NEW.device_id;
-  SELECT json_agg(x) into active_jobs
-	FROM (
-	  SELECT
-		ROW_NUMBER() OVER (PARTITION BY line_task_id ORDER BY exec_time desc) AS r,
-		t.*
-	  FROM
-		jobs_queue t) x
-	WHERE
-	  x.r <= 1;
-
-
+  
   PERFORM pg_notify(
     queue_name,
     json_build_object(
       'operation', TG_OP,
-      'message', row_to_json(NEW),
-	  'active_jobs', active_jobs
+      'message', row_to_json(NEW)
     )::text
   );
 

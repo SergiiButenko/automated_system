@@ -89,7 +89,7 @@ class Device:
 
         lines = dict()
         for rec in records:
-            lines[rec["id"]] = Line(**rec)
+            lines[rec["id"]] = Line(device_id=self.id, **rec)
         self.__lines = lines
 
         return self.__lines

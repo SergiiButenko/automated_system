@@ -6,6 +6,7 @@ services:
     container_name: web
     depends_on:
       - postgres
+      - redis
     environment:
       POSTGRES_CONN: "server=localhost;user=$POSTGRES_USER"
     env_file:
