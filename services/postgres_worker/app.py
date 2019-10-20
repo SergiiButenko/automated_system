@@ -64,6 +64,10 @@ def listener():
             message = payload["message"]
 
             if operation in ["INSERT", "UPDATE"]:
+                    job = """SELECT id, line_task_id, line_id, device_id, desired_state, exec_time, expire_time, status 
+                    FROM jobs_queue
+                    WHERE id = %(job_id)s"""
+                messages = Db.execute(query=job, params={"job_id": message["id"]}, method="fetchone")
                 msg = MsgAnalyzer(**message)
                 msg.analyze_and_exec()
 
