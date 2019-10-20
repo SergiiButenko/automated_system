@@ -90,14 +90,14 @@ def main():
         msg = MsgAnalyzer(**_message)
         msg.analyze_and_exec()
 
-    # l = threading.Thread(target=listener, daemon=True)
-    # l.start()
+    l = threading.Thread(target=listener, daemon=True)
+    l.start()
 
-    s = threading.Thread(target=scheduler_super_task, daemon=True)
-    s.start()
+    # s = threading.Thread(target=scheduler_super_task, daemon=True)
+    # s.start()
 
-    s.join()
-    # l.join()
+    # s.join()
+    l.join()
 
     # read about multipoc
 
