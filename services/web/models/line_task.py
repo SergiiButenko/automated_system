@@ -52,8 +52,8 @@ class LineTask:
         return self.time_ends + timedelta(minutes=self.duration * 2)
 
     def generate_jobs(self):
-        exec_time = self.exec_time
         jobs = []
+        exec_time = self.exec_time
         for i in range(self.iterations):
             jobs.append(
                 Job(
@@ -72,7 +72,7 @@ class LineTask:
                     device_id=self.device_id,
                     desired_state=0,
                     exec_time=exec_time + timedelta(minutes=self.time),
-                    expire_time=exec_time + timedelta(minutes=1),
+                    expire_time=exec_time + timedelta(minutes=self.time + 1),
 
                 )
             )

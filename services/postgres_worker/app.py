@@ -27,7 +27,7 @@ def scheduler():
                     FROM
                         jobs_queue t) jobs
                     WHERE
-                    jobs.r <= 1 and jobs.expire_time >= now() and status = 'pending';"""
+                    jobs.r <= 1 and jobs.expire_time >= (now() at time zone 'utc') and status = 'pending';"""
 
     messages = Db.execute(query=get_active_jobs, method="fetchall")
     logger.info("GOT ACTIVE JOBS")
@@ -79,20 +79,21 @@ def main():
                     FROM
                         jobs_queue t) jobs
                     WHERE
-                    jobs.r <= 1 and jobs.expire_time <= now() and status = 'completed';"""
+                    jobs.r <= 1 and jobs.expire_time <= (now() at time zone 'utc') and status = 'completed';"""
 
     messages = Db.execute(query=get_last_completed_jobs, method="fetchall")
     for _message in messages:
         msg = MsgAnalyzer(**_message)
         msg.analyze_and_exec()
 
-    l = threading.Thread(target=listener, daemon=True)
-    l.start()
-    l.join()
+    # l = threading.Thread(target=listener, daemon=True)
+    # l.start()
 
     s = threading.Thread(target=scheduler_super_task, daemon=True)
     s.start()
+
     s.join()
+    # l.join()
 
     # read about multipoc
 

@@ -51,6 +51,8 @@ class MsgAnalyzer:
 
     def analyze_time(self):
         now = datetime.now(timezone.utc)
+        logger.info(type(self.expire_time))
+        logger.info(type(now))
         logger.info(self.expire_time > now)
 
         return True

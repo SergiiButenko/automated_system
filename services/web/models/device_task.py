@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.line_task import LineTask
 from models.device import Device
@@ -53,7 +53,7 @@ class DeviceTask:
 
     @staticmethod
     def calculate(device_id, lines):
-        exec_time = datetime.now()
+        exec_time = datetime.now(timezone.utc)
 
         line_tasks = list()
         for line_to_plan in lines:
