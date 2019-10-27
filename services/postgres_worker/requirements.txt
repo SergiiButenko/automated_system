@@ -1,5 +1,5 @@
 psycopg2-binary==2.8.2
 celery==4.3.0
 redis==3.2.1
-requests
+requests==2.18.4
 schedule

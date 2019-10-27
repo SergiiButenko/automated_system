@@ -7,7 +7,7 @@ import time
 
 from datetime import datetime
 
-from resources.db import Db
+from resources.db import Db, Database
 
 # from helpers.messages import send_message
 from models import MsgAnalyzer
@@ -46,6 +46,8 @@ def scheduler_super_task():
 
 
 def listener():
+    Db = Database()
+
     Db.execute(query='LISTEN "{}";'.format(os.environ["CONSOLE_ID"]))
     logger.info(
         'Waiting for notifications on channel "{}";'.format(os.environ["CONSOLE_ID"])
@@ -93,10 +95,10 @@ def main():
     l = threading.Thread(target=listener, daemon=True)
     l.start()
 
-    # s = threading.Thread(target=scheduler_super_task, daemon=True)
-    # s.start()
+    s = threading.Thread(target=scheduler_super_task, daemon=True)
+    s.start()
 
-    # s.join()
+    s.join()
     l.join()
 
     # read about multipoc

@@ -15,7 +15,7 @@ class Line:
         self.relay_num = relay_num
         self.status = status
 
-        self.__state = None
+        self.__state = dict(current=None, desired=None, updated=None)
 
     @property
     def state(self):
@@ -24,20 +24,20 @@ class Line:
 
     @state.setter
     def state(self, state):
-        self.__state = state
+        self.__state['desired'] = state
 
-        new_state = dict(relay_num=self.relay_num, state=state)
+    def save_remote_state(self):
+        new_state = dict(relay_num=self.relay_num, desire_state=self.state['desired'])
         msg = dict(action="set_state", device_id=self.device_id, state=new_state)
 
         logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
-        Mosquitto.send_message(topic=self.device_id, payload=msg)
-        # send request to websocket
+        Mosquitto.send_message(topic=self.device_id+'/device', payload=msg)
 
     def request_state(self):
         msg = dict(action="get_state", device_id=self.device_id)
 
         logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
-        Mosquitto.send_message(topic=self.device_id, payload=msg)
+        Mosquitto.send_message(topic=self.device_id+'/device', payload=msg)
 
     def to_json(self):
         return {

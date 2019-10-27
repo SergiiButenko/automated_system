@@ -3,6 +3,7 @@
 # like a SQLAlchemy instance.
 import logging
 import json
+import Redis
 
 from resources import Db, Mosquitto
 from .line import Line
@@ -60,6 +61,16 @@ class Device:
 
         return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
 
+    @staticmethod
+    def get_from_cache(device_id):
+        _device= Redis.get(device_id)
+        return Device(**_device)
+    
+    def save_to_cache(self):
+        Redis.set(self.id, self.to_json())
+        logger.info("Save to cache: {} device_id".format(self.id))
+        return self
+
     def __init__(
         self,
         id,
@@ -97,6 +108,7 @@ class Device:
 
     def subscribe(self):
         Mosquitto.subscribe(self.id)
+        logger.info("Listening to {} device_id".format(self.id))
 
     def to_json(self):
         return {

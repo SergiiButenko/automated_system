@@ -47,8 +47,8 @@ class _Mosquitto:
         return self.client.publish(topic=topic, payload=json.dumps(payload))
 
     def subscribe(self, topic):
-        logger.info("Subscribing to {} topic".format(topic))
-        self.client.subscribe(topic)
-
+        general_topic = str(topic) + '/+'
+        logger.info("Subscribing to {} topic".format(general_topic))
+        self.client.subscribe(general_topic)
 
 Mosquitto = _Mosquitto()
