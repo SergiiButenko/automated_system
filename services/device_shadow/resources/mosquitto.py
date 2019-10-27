@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 import os, time, logging, json
+from resources import Devices
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,8 +21,20 @@ class _Mosquitto:
 
     @staticmethod
     def _on_message(client, userdata, message):
-        logger.info("message received " + str(message.payload.decode("utf-8")))
+        msg = message.payload.decode("utf-8")
+        logger.info("message received " + str(msg))
         logger.info("message topic=" + str(message.topic))
+        try:
+            msg = json.loads(msg)
+        except Exception:
+            logger.error("Reseived message is not a JSON")
+            return
+
+        device = Devices.get_by_id(msg['device_id'])
+
+        for _line in msg['lines'].items():
+            device.set_line_state_by_relay_num(_line['actual_state'])
+
         
     def __init__(self):
         broker_address = str(os.environ["MOSQUITTO_HOST"])

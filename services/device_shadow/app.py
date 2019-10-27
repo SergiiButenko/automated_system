@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from flask.json import JSONEncoder
 
 from models import Device, Line
+from resources import Devices
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,26 +28,27 @@ app.json_encoder = CustomJSONEncoder
 
 @app.route("/<string:device_id>/lines", methods=["GET"])
 def get_state(device_id):
-    return jsonify(lines=Device.get_from_cache(device_id).lines)
+    device = Devices.get_by_id(device_id)
+
+    return jsonify(lines=device.lines)
 
 @app.route("/<string:device_id>/lines/<string:line_id>", methods=["GET"])
 def get_line_state(device_id, line_id):
-    return jsonify(lines=Device.get_from_cache(device_id).lines[line_id])
-
+    device = Devices.get_by_id(device_id)
+    
+    return jsonify(lines=device.get_line_by_id(line_id))
 
 @app.route("/<string:device_id>/lines/<string:line_id>", methods=["PUT"])
 def post_state(device_id, line_id):
     data = request.get_json()
-    _device = Device.get_from_cache(device_id)
+    device = Devices.get_by_id(device_id)
 
-    logger.info("current state {}".format(_device.lines[line_id].state))
-    _device.lines[line_id].state = data['state']
-    _device.lines[line_id].save_remote_state()
-    _device.save_to_cache()
+    logger.info("current state {}".format(device.get_line_state_by_id(line_id)))
+    device.set_line_state_by_id(line_id, data['state'])
+    
+    logger.info("new state {}".format(device.get_line_state_by_id(line_id)))
 
-    logger.info("new state {}".format(_device.lines[line_id].state))
-
-    return jsonify(state=_device.lines[line_id])
-
+    return jsonify(lines=device.get_line_by_id(line_id))
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

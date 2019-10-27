@@ -97,6 +97,12 @@ class Device:
 
         return lines
 
+    def get_line_by_id(self, line_id):
+        try:
+            return self.lines[line_id]
+        except Exception:
+            logger.error("No {} line_id for {} device_id".format(line_id, self.id))
+
     def save_remote_state(self):
         msg = dict(action="set_state", device_id=self.id, state=self.lines)
         logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
@@ -118,12 +124,12 @@ class Device:
         return None
 
     def set_line_state_by_id(self, line_id, state):
-        self.lines[line_id].state = state
+        self.get_line_by_id(line_id).state = state
         return self.get_line_state_by_id(line_id)
 
     def get_line_state_by_id(self, line_id):
         self.refresh_lines_state()
-        return self.lines[line_id].state
+        return self.get_line_by_id(line_id).state
  
     def subscribe(self):
         Mosquitto.subscribe(self.id)
