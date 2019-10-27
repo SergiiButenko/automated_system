@@ -48,10 +48,5 @@ def post_state(device_id, line_id):
 
     return jsonify(state=_device.lines[line_id])
 
-
-for _device in Device.get_all(console_id=os.environ["CONSOLE_ID"]):
-    _device.subscribe()
-    _device.save_to_cache()
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

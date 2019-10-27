@@ -61,16 +61,6 @@ class Device:
 
         return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
 
-    @staticmethod
-    def get_from_cache(device_id):
-        _device= Redis.get(device_id)
-        return Device(**_device)
-    
-    def save_to_cache(self):
-        Redis.set(self.id, self.to_json())
-        logger.info("Save to cache: {} device_id".format(self.id))
-        return self
-
     def __init__(
         self,
         id,
@@ -95,6 +85,7 @@ class Device:
         self.console = console
         self.state = None
         self.lines = self._init_lines()
+        self.mosquitto_topic = self.id + '/device'
 
     def _init_lines(self):
         records = Device._get_device_lines(device_id=self.id, line_id=None)
@@ -106,6 +97,34 @@ class Device:
 
         return lines
 
+    def save_remote_state(self):
+        msg = dict(action="set_state", device_id=self.id, state=self.lines)
+        logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
+        Mosquitto.send_message(topic=self.mosquitto_topic, payload=msg)
+
+    def refresh_lines_state(self):
+        msg = dict(action="get_state", device_id=self.id)
+
+        logger.info("sending message, topic: {}; message: {}".format(self.id, msg))
+        Mosquitto.send_message(topic=self.mosquitto_topic, payload=msg)
+
+    def set_line_state_by_relay_num(self, relay_num, state):
+        for _line in self.lines:
+            if _line.relay_num == relay_num:
+                _line.relay_num.state = state
+                logger.info("{} line state is now {}".format(_line.id, _line.state))
+                return _line.state
+        
+        return None
+
+    def set_line_state_by_id(self, line_id, state):
+        self.lines[line_id].state = state
+        return self.get_line_state_by_id(line_id)
+
+    def get_line_state_by_id(self, line_id):
+        self.refresh_lines_state()
+        return self.lines[line_id].state
+ 
     def subscribe(self):
         Mosquitto.subscribe(self.id)
         logger.info("Listening to {} device_id".format(self.id))
@@ -121,6 +140,7 @@ class Device:
             "version": self.version,
             "settings": self.settings,
             "state": self.state,
+            "lines": self.lines,
         }
 
     serialize = to_json

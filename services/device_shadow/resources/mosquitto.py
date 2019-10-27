@@ -22,7 +22,7 @@ class _Mosquitto:
     def _on_message(client, userdata, message):
         logger.info("message received " + str(message.payload.decode("utf-8")))
         logger.info("message topic=" + str(message.topic))
-
+        
     def __init__(self):
         broker_address = str(os.environ["MOSQUITTO_HOST"])
         broker_portno = int(os.environ["MOSQUITTO_PORT"])
