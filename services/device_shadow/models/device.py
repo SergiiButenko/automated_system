@@ -3,7 +3,6 @@
 # like a SQLAlchemy instance.
 import logging
 import json
-import Redis
 
 from resources import Db, Mosquitto
 from .line import Line

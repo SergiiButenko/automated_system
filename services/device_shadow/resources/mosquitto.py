@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
 import os, time, logging, json
-from resources import Devices
+from .devices import Devices
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

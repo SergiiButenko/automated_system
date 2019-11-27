@@ -1,10 +1,10 @@
 import os, logging
-from models import Device
+from .device import Device
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class Devices:
+class _Devices:
     def __init__(self):
         self.devices = dict()
         for _device in Device.get_all(console_id=os.environ["CONSOLE_ID"]):
@@ -18,3 +18,5 @@ class Devices:
         except Exception:
             logger.error("No {} device_id for console".format(device_id))
             return None
+
+Devices = _Devices()
