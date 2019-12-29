@@ -118,8 +118,6 @@ class LineTask:
     def cancel(self):
         for job in self.jobs:
             job.cancel()
-        
-        pass
 
     def to_json(self):
         return dict(
