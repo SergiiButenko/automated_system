@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class BaseDevice():
     
     @staticmethod
@@ -32,7 +34,7 @@ class BaseDevice():
         version,
         settings,
         console=None,
-        lines=None,
+        lines=None
     ):
         self.id = id
         self.name = name
@@ -43,14 +45,14 @@ class BaseDevice():
         self.version = version
         self.settings = settings
         self.console = console
-
+        self.state = None
         # self.lines = self._init_lines()
-        # self.state = self.refresh_state()
 
-    def send_message(self):
-        pass
+    @property
+    def status(self):
+        return dict(description='online', time=datetime.now())
 
-    def to_json(self):
+    def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
@@ -60,8 +62,5 @@ class BaseDevice():
             "model": self.model,
             "version": self.version,
             "settings": self.settings,
-            "lines": self.lines,
-            "state": self.state,
+            "status": self.status,
         }
-
-    serialize = to_json

@@ -1,3 +1,11 @@
 celery==4.3.0
 redis==3.2.1
 requests==2.18.4
+schedule==0.6.0
+Flask==1.1.1
+Flask-JWT-Extended==3.14.0
+Flask-SocketIO==3.3.2
+gunicorn==19.9.0
+psycopg2-binary==2.8.2
+bcrypt==3.1.5
+eventlet==0.24.1
