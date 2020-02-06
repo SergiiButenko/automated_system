@@ -60,9 +60,6 @@
     INSERT INTO public.users(id, email, name, password) VALUES ('9e1aa40b-7d3d-4207-9705-39a5393edaab', 'butenko2003@ukr.net', 'advanced','$2b$12$WdbdI4b/oZifO4LbbfwtQ.C3iHNOyJP1lvuxVH6fnbUgxQrFJqlfy');
 
 
-
-
-
     --- device SECTION ---
     CREATE TABLE public.devices(
         id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -71,8 +68,7 @@
         console uuid,
         type text NOT NULL,
         device_type text NOT NULL,
-        model text NOT NULL,
-        version text NOT NULL,
+        protocol text NOT NULL,
         FOREIGN KEY (console) REFERENCES devices(id)
     );
 
@@ -80,8 +76,6 @@
         name text NOT NULL PRIMARY KEY,
         description text NOT NULL
     );
-    INSERT INTO public.device_parameters(name, description) VALUES('comm_protocol', 'Тип радіо канала датчика: IP, Radio');
-    INSERT INTO public.device_parameters(name, description) VALUES('ip', 'Адреса девайса');
     INSERT INTO public.device_parameters(name, description) VALUES('relay_quantity', 'Кількість реле');
 
 
@@ -94,45 +88,33 @@
         FOREIGN KEY (setting) REFERENCES device_parameters(name)
     );
 
-    INSERT INTO public.devices(id, name, description, type, device_type, model, version) VALUES (
+    INSERT INTO public.devices(id, name, description, type, device_type, protocol) VALUES (
         'a1106ae2-b537-45c8-acb6-aca85dcee675',
         'Перегонівка Хаб',
         'Центральна консоль',
         'actuator',
         'console',
-        'rasbpery_pi',
-        '0.1'
+        'mqtt'
         );
 
-    INSERT INTO public.devices(id, name, description, console, type, device_type, model, version) VALUES (
+    INSERT INTO public.devices(id, name, description, console, type, device_type, protocol) VALUES (
         'c66f67ec-84b1-484f-842f-5624415c5841',
         'Полив',
         'Контроллер поливу огорода',
         'a1106ae2-b537-45c8-acb6-aca85dcee675',
         'actuator',
         'relay',
-        'NO',
-        '0.1');
-    INSERT INTO public.device_settings (device_id, setting, value) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', 'comm_protocol', 'network');
-    INSERT INTO public.device_settings (device_id, setting, value) VALUES (
-    'c66f67ec-84b1-484f-842f-5624415c5841', 'ip', 'http://192.168.1.4/30000/');
+        'mqtt');
     INSERT INTO public.device_settings (device_id, setting, value) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', 'relay_quantity', '16');
 
-    INSERT INTO public.devices(id, name, description, console, type, device_type, model, version) VALUES (
+    INSERT INTO public.devices(id, name, description, console, type, device_type, protocol) VALUES (
         '75308265-98aa-428b-aff6-a13beb5a3129',
         'Верхня бочка',
         'Контроллер заповнення',
         'a1106ae2-b537-45c8-acb6-aca85dcee675',
-        'actuator',
+        'sensor',
         'fill',
-        'NC',
-        '0.1');
-    INSERT INTO public.device_settings (device_id, setting, value) VALUES ('75308265-98aa-428b-aff6-a13beb5a3129', 'comm_protocol', 'network');
-    INSERT INTO public.device_settings (device_id, setting, value) VALUES (
-    '75308265-98aa-428b-aff6-a13beb5a3129', 'ip', 'http://192.168.1.4/30000/');
-    INSERT INTO public.device_settings (device_id, setting, value) VALUES (
-    '75308265-98aa-428b-aff6-a13beb5a3129', 'relay_quantity', '16');
-
+        'mqtt');
 
     CREATE TABLE public.device_user(
         id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -149,7 +131,9 @@
     CREATE TABLE public.groups (
         id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         name text NOT NULL,
-        description text
+        description text,
+        user_id uuid NOT NULL,
+        FOREIGN KEY(user_id) REFERENCES users(id)
     );
     INSERT INTO public.groups(id, name, description) VALUES ('80122551-18bc-4846-9799-0b728324251c', 'Огород', 'Все, що смачне');
 
@@ -163,55 +147,12 @@
     INSERT INTO public.device_groups(device_id, group_id) VALUES ('c66f67ec-84b1-484f-842f-5624415c5841', '80122551-18bc-4846-9799-0b728324251c');
 
 
-
-
-
-
--- RULES SECTION ---
-
-CREATE TABLE public.actions (
-    name text NOT NULL PRIMARY KEY,
-    description text
-);
-INSERT INTO public.actions(name, description) VALUES ('ON', 'Увімкнути актуатор');
-INSERT INTO public.actions(name, description) VALUES ('OFF', 'Вимкнути актуатор');
-
-
-CREATE TABLE public.rules (
-    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    action text NOT NULL,
-    prioriy INT NOT NULL DEFAULT 0,
-    notify BOOL NOT NULL DEFAULT 'false',
-    sensor_id uuid NOT NULL,
-    device_id uuid NOT NULL,
-    condition text NOT NULL,
-    variable text NOT NULL,
-    operator text NOT NULL,
-    value text NOT NULL,
-    FOREIGN KEY (action) REFERENCES actions(name),
-    FOREIGN KEY(device_id) REFERENCES devices(id),
-    FOREIGN KEY(sensor_id) REFERENCES devices(id)
-);
-
-
-
--- IRRIGATION SECTION ---
-
-CREATE TABLE public.line_status (
-    name text NOT NULL PRIMARY KEY,
-    description text NOT NULL
-);
-INSERT INTO public.line_status VALUES ('activated', 'Включено');
-INSERT INTO public.line_status VALUES ('deactivated', 'Вимкнуто');
-
-
+-- lines SECTION ---
 CREATE TABLE public.lines (      
     id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
     name text NOT NULL,
     description text,
-    relay_num int NOT NULL DEFAULT 0,
-    status text NOT NULL,
-    FOREIGN KEY (status) REFERENCES line_status(name)
+    relay_num int NOT NULL DEFAULT 0
 );
 
 CREATE TABLE public.line_parameters (
@@ -247,19 +188,8 @@ CREATE TABLE public.line_device (
     FOREIGN KEY(line_id) REFERENCES lines(id)
 );
 
-CREATE TABLE public.allowed_status_for_line (
-    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    line_id uuid NOT NULL,
-    allowed_status name NOT NULL,
-    FOREIGN KEY(line_id) REFERENCES lines(id),
-    FOREIGN KEY(allowed_status) REFERENCES line_status(name)
-);
-
-
-INSERT INTO public.lines(id, name, status, relay_num) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'Полуниця клумба', 'deactivated', 0);
+INSERT INTO public.lines(id, name, relay_num) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'Полуниця клумба', 0);
 INSERT INTO public.line_settings (line_id, setting, value) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'type', 'irrigation');
-INSERT INTO public.allowed_status_for_line (line_id, allowed_status) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'activated');
-INSERT INTO public.allowed_status_for_line (line_id, allowed_status) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'deactivated');
 
 INSERT INTO public.line_settings (line_id, setting, value) VALUES ('80122552-18bc-4846-9799-0b728324251c', 'irrigation_modes',
     '{"irrigation_low": {"operation_time_wait": 0, "operation_execution_time": 10, "operation_intervals": 1}},
@@ -271,55 +201,14 @@ INSERT INTO public.line_device (line_id, device_id) VALUES ('80122552-18bc-4846-
 
 
 ---job section---
-CREATE TABLE public.device_tasks (
+CREATE TABLE public.tasks (
     id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    status text DEFAULT 'pending' NOT NULL,
     device_id uuid NOT NULL,
+    line_id uuid NOT NULL,
     exec_time TIMESTAMPTZ DEFAULT NOW(),
-    type text NOT NULL DEFAULT 'onetime',
-    FOREIGN KEY(device_id) REFERENCES devices(id)
-);
-
-CREATE TABLE public.line_tasks (
-    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    device_task_id uuid NOT NULL,
-    line_id uuid NOT NULL,
-    device_id uuid NOT NULL,
-    status text DEFAULT 'pending' NOT NULL,
-    exec_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    expire_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    time INT NOT NULL,
-    iterations INT NOT NULL,
-    time_sleep INT NOT NULL,
-    FOREIGN KEY(device_task_id) REFERENCES device_tasks(id),
-    FOREIGN KEY(device_id) REFERENCES devices(id),
-    FOREIGN KEY(line_id) REFERENCES lines(id)
-);
-
-CREATE TABLE public.job_statuses (
-    name text NOT NULL PRIMARY KEY,
-    description text NOT NULL
-);
-INSERT INTO public.job_statuses VALUES('pending', 'Заплановано');
-INSERT INTO public.job_statuses VALUES('done', 'Виконано');
-INSERT INTO public.job_statuses VALUES('failed', 'Не виконано');
-INSERT INTO public.job_statuses VALUES('canceled', 'Скасовано');
-INSERT INTO public.job_statuses VALUES('canceled_rain', 'Скасовано через дощ');
-INSERT INTO public.job_statuses VALUES('canceled_humidity', 'Скасовано через вологість');
-INSERT INTO public.job_statuses VALUES('canceled_mistime', 'Скасовано через помилку з часом');
-
-CREATE TABLE public.jobs_queue(
-    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    line_task_id uuid NOT NULL,
-    line_id uuid NOT NULL,
-    device_id uuid NOT NULL,
     desired_state text NOT NULL,
-    exec_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    expire_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    status text DEFAULT 'pending' NOT NULL,
-    FOREIGN KEY(line_task_id) REFERENCES line_tasks(id),
-    FOREIGN KEY(line_id) REFERENCES lines(id),
-    FOREIGN KEY(device_id) REFERENCES devices(id),
-    FOREIGN KEY(status) REFERENCES job_statuses(name)
+    FOREIGN KEY(device_id) REFERENCES devices(id)
 );
 
 CREATE OR REPLACE FUNCTION notify_jobs_queue_change()
@@ -343,6 +232,6 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER jobs_queue_changed
 AFTER INSERT OR UPDATE OR DELETE
-ON jobs_queue
+ON tasks
 FOR EACH ROW
 EXECUTE PROCEDURE notify_jobs_queue_change();

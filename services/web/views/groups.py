@@ -21,5 +21,17 @@ def groups_route():
 
 @groups.route("/<string:group_id>", methods=["GET"])
 @jwt_required
-def groups_lines_route(group_id):
-    return jsonify(groups=[Group.get_by_id(group_id=group_id)])
+def groups_id_route(group_id):
+    cr_user = get_jwt_identity()
+    groups = Group.get_by_id(group_id=group_id, user_identiry=cr_user)
+    
+    return jsonify(groups=[groups])
+
+@groups.route("/<string:group_id>/devices", methods=["GET"])
+@jwt_required
+def groups_id_device_route(group_id):
+    cr_user = get_jwt_identity()
+    group = Group.get_by_id(group_id=group_id, user_identiry=cr_user)
+    group.init_devices()
+
+    return jsonify(groups=[group])

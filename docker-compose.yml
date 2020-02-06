@@ -22,7 +22,6 @@ services:
         timeout: 10s
         retries: 3
 
-
   frontend:
     build:
       context: ./services/frontend
@@ -85,21 +84,41 @@ services:
       timeout: 5s
       retries: 5
 
-#  mongo-db:
-#    image: mongo:3.6
-#    hostname: mongo-db
-#    container_name: db-mongo
-#    expose:
-#      - "27017"
-#    ports:
-#      - "27017:27017"
-#    networks:
-#      - backend
-#    command: --bind_ip_all --smallfiles
-#    volumes:
-#      - mongo-data:/data
+  postgres-worker:
+    build:
+      context: services/postgres_worker
+    container_name: postgres-worker
+    depends_on:
+      - device-shadow
+    env_file:
+      - ./.env
+    command: python -m app
+    restart: unless-stopped
 
+  device-shadow:
+    build:
+      context: services/device_shadow
+    container_name: device-shadow
+    expose:
+      - 80
+    ports:
+      - 7777:80
+    env_file:
+      - ./.env
+    command: /usr/local/bin/gunicorn app:app -w 1 -t 90 -b 0.0.0.0:80
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    expose:
+      - 1883
+      - 9001
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+        - ./configs/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    
 volumes:
   redis_data:
   postgres-data:
-  #mongo-data:

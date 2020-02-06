@@ -87,8 +87,7 @@ class Device:
         description,
         type,
         device_type,
-        model,
-        version,
+        protocol,
         settings,
         console=None,
         lines=None,
@@ -98,31 +97,27 @@ class Device:
         self.description = description
         self.type = type
         self.device_type = device_type
-        self.model = model
-        self.version = version
+        self.protocol = protocol
         self.settings = settings
         self.console = console
 
         self.lines = self._init_lines()
-        self.state = self.refresh_state()
+        self.state = self.get_state()
 
     def _init_lines(self):
         records = Device._get_device_lines(device_id=self.id, line_id=None)
 
         lines = dict()
         for rec in records:
-            lines[rec["id"]] = Line(device_id=self.id, **rec)
+            lines[rec["id"]] = Line(**rec)
 
         return lines
 
-    def refresh_state(self):
-        if self.lines is None:
-            self.lines = self._init_lines()
-
+    def get_state(self):
         # get from redis
         # request change
-        state = "offline"
-        if self.settings["comm_protocol"] == "network":
+        state = "online"
+        if self.protocol == "mqtt":
             try:
                 # lines_state = requests.get(url=self.settings["ip"] + "99")
                 # lines_state.raise_for_status()
@@ -133,7 +128,6 @@ class Device:
                 # lines_state = list(map(int, lines_state))
                 # logger.info(lines_state)
                 lines_state = [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1]
-                state = "online"
 
                 for line in self.lines:
                     line.state = lines_state[line.relay_num]
@@ -148,7 +142,7 @@ class Device:
         # get from redis
         # request change
         state = self.state
-        if self.settings["comm_protocol"] == "network":
+        if self.protocol == "mqtt":
             try:
                 # lines_state = requests.get(url=self.settings["ip"] + "99")
                 # lines_state.raise_for_status()
@@ -179,8 +173,7 @@ class Device:
             "description": self.description,
             "type": self.type,
             "device_type": self.device_type,
-            "model": self.model,
-            "version": self.version,
+            "protocol": self.protocol,
             "settings": self.settings,
             "lines": self.lines,
             "state": self.state,

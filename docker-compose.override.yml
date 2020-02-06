@@ -14,20 +14,6 @@ services:
     volumes:
       - ./services/frontend:/opt/app
     command: sh -c "yarn && yarn start"
-
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
-      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
-    volumes:
-      - pgadmin-data:/root/.pgadmin
-    expose:
-      - "${PGADMIN_PORT}"
-    ports:
-      - "${PGADMIN_PORT}:80"
-    restart: unless-stopped
-
+    
 volumes:
   pgadmin-data:
