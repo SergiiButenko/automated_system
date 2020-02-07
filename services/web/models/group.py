@@ -1,8 +1,8 @@
 # This is an example of a complex object that we could build
 # a JWT from. In practice, this will likely be something
 # like a SQLAlchemy instance.
+from resources.group_dao import GroupDAO
 from models import Device
-from resources import Db
 
 import logging
 
@@ -12,37 +12,20 @@ logger = logging.getLogger(__name__)
 
 class Group:
     @staticmethod
-    def get_by_id(group_id, user_identiry):
-        q = """select * from groups where id = %(group_id)s and user_id = %(user_id)s"""
-
-        group = Db.execute(q, params={"group_id": group_id, "user_id": user_identiry}, method="fetchone")
+    def get_by_id(group_id, user_id):
+        group = GroupDAO.get_by_id(group_id, user_id)
         if group is None:
-            raise Exception("No group_id {} found".format(group_id))
+            raise Exception(f"No group_id {group_id} found")
 
         return Group(**group)
 
     @staticmethod
-    def get_all(user_identity):
-        q = """
-                       select g.* from groups as g where id in (
-                            select group_id from device_groups where device_id in (
-                                select device_id from device_user where user_id in (
-                                                select id from users where name = %(user_identity)s
-                                            )
-                            )
-                        )
-                        """
-
-        records = Db.execute(q, params={"user_identity": "admin"}, method="fetchall")
-        groups = list()
-
+    def get_by_user_id(user_id):
+        records = GroupDAO.get_by_user_id(user_id)
         if len(records) == 0:
-            logger.info("No groups for user '{}' found".format(user_identity))
-            return groups
+            raise Exception(f"No groups for user '{user_id}' found")
 
-        for rec in records:
-            groups.append(Group(**rec))
-
+        groups = [Group(**rec) for rec in records]
         groups.sort(key=lambda e: e.name)
 
         return groups
@@ -51,38 +34,17 @@ class Group:
         self.id = id
         self.name = name
         self.description = description
+        self.devices = []
 
-    # def init_devices(self):
-    #     q = """
-    #                 select
-    #                 d.*,
-    #                 jsonb_object_agg(setting, value) as settings
-    #                 from device_settings as s
-    #                 join devices as d on s.device_id = d.id
-    #                 where s.device_id in (
-    #                 select id from devices where id in (
-    #                     select device_id from device_groups where group_id = %(group_id)s
-    #                     )
-    #                 )
-    #                 group by d.id
-    #                 """
-    #     records = Db.execute(q, {"group_id": self.id}, method="fetchall")
-    #     if len(records) == 0:
-    #         logger.info("No devices in group_id '{}'".format(self.id))
-    #         return self
-
-    #     devices = list()
-    #     for rec in records:
-    #         devices.append(Device(**rec))
-
-    #     devices.sort(key=lambda e: e.name)
-    #     return devices
+    def init_devices(self):
+        return Device.get_by_group_id(self.id)
 
     def to_json(self):
         return {
             "id": self.id,
             "name": self.name,
-            "description": self.description
+            "description": self.description,
+            "devices": self.devices,
         }
 
     serialize = to_json

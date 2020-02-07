@@ -1,7 +1,7 @@
 import logging
 
 from models.line import Line
-from resources import Db
+from resources.device_dao import DeviceDAO
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -9,76 +9,34 @@ logger = logging.getLogger(__name__)
 
 class Device:
     @staticmethod
-    def get_by_id(device_id):
-        q = """
-                    select
-                    d.*,
-                    jsonb_object_agg(setting, value) as settings
-                    from device_settings as s
-                    join devices as d on s.device_id = d.id
-                    where s.device_id = %(device_id)s
-                    group by d.id
-                    """
+    def get_by_id(device_id, user_id):
+        record = DeviceDAO.get_by_id(device_id, user_id)
+        if record is None:
+            raise Exception(f"No device_id '{device_id}' found")
 
-        device = Db.execute(q, {"device_id": device_id}, method="fetchone")
-        if device is None:
-            raise Exception("No device_id '{}' found".format(device_id))
-
-        return Device(**device)
+        return Device(**record)
 
     @staticmethod
-    def get_all(user_identity):
-        q = """
-                    select
-                    d.*,
-                    jsonb_object_agg(setting, value) as settings
-                    from device_settings as s
-                    join devices as d on s.device_id = d.id
-                    where s.device_id in (
-                    select id from devices where id in (
-                        select device_id from device_user where user_id in (
-                            select id from users where name = %(user_identity)s
-                            )
-                        )
-                    )
-                    group by d.id
-                    """
-
-        records = Db.execute(q, {"user_identity": user_identity}, method="fetchall")
-        devices = list()
-
+    def get_by_user_id(user_id):
+        records = DeviceDAO.get_by_user_id(user_id)
         if len(records) == 0:
-            logger.info("No devices for user '{}' found".format(user_identity))
-            return devices
+            raise Exception(f"No devices for user '{user_id}' found")
 
-        for rec in records:
-            devices.append(Device(**rec))
-
+        devices = [Device(**rec) for rec in records]
         devices.sort(key=lambda e: e.name)
 
         return devices
 
     @staticmethod
-    def _get_device_lines(device_id, line_id):
-        line = ""
-        if line_id is not None:
-            line = " and line_id = '{line_id}'".format(line_id=line_id)
+    def get_by_group_id(group_id):
+        records = DeviceDAO.get_by_group_id(group_id)
+        if len(records) == 0:
+            raise Exception(f"No devices in group_id '{group_id}'")
 
-        q = """
-            select
-            l.*,
-            jsonb_object_agg(setting, value) as settings
-            from line_settings as s
-            join lines as l on s.line_id = l.id
-            where l.id in (
-                select line_id from line_device where device_id = %(device_id)s
-            ) {line}
-            group by l.id
-        """.format(
-            line=line
-        )
+        devices = [Device(**rec) for rec in records]
+        devices.sort(key=lambda e: e.name)
 
-        return Db.execute(query=q, params={"device_id": device_id}, method="fetchall")
+        return devices
 
     def __init__(
         self,
@@ -89,8 +47,9 @@ class Device:
         device_type,
         protocol,
         settings,
-        console=None,
-        lines=None,
+        state,
+        updated_at=None,
+        console=None
     ):
         self.id = id
         self.name = name
@@ -100,71 +59,16 @@ class Device:
         self.protocol = protocol
         self.settings = settings
         self.console = console
-
-        self.lines = self._init_lines()
-        self.state = self.get_state()
-
-    def _init_lines(self):
-        records = Device._get_device_lines(device_id=self.id, line_id=None)
-
-        lines = dict()
-        for rec in records:
-            lines[rec["id"]] = Line(**rec)
-
-        return lines
-
-    def get_state(self):
-        # get from redis
-        # request change
-        state = "online"
-        if self.protocol == "mqtt":
-            try:
-                # lines_state = requests.get(url=self.settings["ip"] + "99")
-                # lines_state.raise_for_status()
-
-                # lines_state = re.findall("\d+", lines_state.text)
-                # logger.info(lines_state)
-
-                # lines_state = list(map(int, lines_state))
-                # logger.info(lines_state)
-                lines_state = [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1]
-
-                for line in self.lines:
-                    line.state = lines_state[line.relay_num]
-            except Exception as e:
-                logger.error("device is offline")
-                logger.error(e)
-                state = "offline"
-
-        return state
-
-    def set_state(self, desired_state):
-        # get from redis
-        # request change
-        state = self.state
-        if self.protocol == "mqtt":
-            try:
-                # lines_state = requests.get(url=self.settings["ip"] + "99")
-                # lines_state.raise_for_status()
-
-                # lines_state = re.findall("\d+", lines_state.text)
-                # logger.info(lines_state)
-
-                # lines_state = list(map(int, lines_state))
-                # logger.info(lines_state)
-                lines_state = [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1]
-                state = "online"
-
-                for line in self.lines:
-                    line.state = lines_state[line.relay_num]
-            except Exception as e:
-                logger.error("device is offline")
-                logger.error(e)
-                state = "offline"
-
         self.state = state
+        self.updated_at = updated_at
 
-        return self
+        self.lines = []
+
+    def init_lines(self):
+        return Line.get_by_device_id(self.id)
+        
+    def refresh_state(self):
+        pass
 
     def to_json(self):
         return {
@@ -177,6 +81,7 @@ class Device:
             "settings": self.settings,
             "lines": self.lines,
             "state": self.state,
+            "updated_at": self.updated_at,
         }
 
     serialize = to_json
