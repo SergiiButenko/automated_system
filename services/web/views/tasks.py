@@ -14,8 +14,6 @@ tasks = Blueprint("tasks", __name__)
 @tasks.route("/<string:device_id>", methods=["POST"])
 # @jwt_required
 def set_rules_for_device(device_id):
-    cr_user = get_jwt_identity()
-
     income_json = request.json
 
     device_task = DeviceTask.calculate(device_id=device_id, lines=income_json["lines"])
@@ -27,8 +25,6 @@ def set_rules_for_device(device_id):
 @tasks.route("/<string:device_id>", methods=["DELETE"])
 # @jwt_required
 def delete_rules_for_device(device_id):
-    cr_user = get_jwt_identity()
-
     income_json = request.json
 
     device_task = DeviceTask.get_by_id(device_task_id=income_json["lines"])
