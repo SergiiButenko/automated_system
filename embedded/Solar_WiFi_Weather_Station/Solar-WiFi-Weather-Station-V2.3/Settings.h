@@ -16,9 +16,11 @@ char auth[] = "your Blynk Auth Token"; // Blynk Auth Token
 
 char ssid[] = "NotebookNet";            // WiFi Router ssid
 char pass[] = "0660101327";             // WiFi Router password
+int retry_limit = 5;
+int delay_between_requests = 10000;
 
 const char* server = "192.168.1.22";        // Thingspeak Write API
-const char* api_key = "your Thingspeak API key";         // API write key 
+const char* api_key = "123";         // API write key 
 
 /****** MQTT Settings ********************************************************/
 
