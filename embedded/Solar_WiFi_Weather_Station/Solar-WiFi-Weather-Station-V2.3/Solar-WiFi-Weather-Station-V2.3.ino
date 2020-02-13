@@ -93,6 +93,7 @@
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <BlynkSimpleEsp8266.h>  //https://github.com/blynkkk/blynk-library
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include "FS.h"
@@ -128,6 +129,8 @@ String trend_in_words;              // Trend in words
 String forecast_in_words;           // Weather forecast in words
 String pressure_in_words;           // Air pressure in words
 String accuracy_in_words;           // Zambretti's prediction accuracy in words
+String ssid = "NotebookNet";
+String pass = "0660580558";
 void(* resetFunc) (void) = 0;       // declare reset function @ address 0
 
 WiFiClient client;
@@ -172,6 +175,9 @@ void setup() {
   }
   Serial.println(" Wifi connected ok"); 
     
+  if (App1 == "BLYNK") {        // for posting data to Blynk App
+    Blynk.begin(auth, ssid, pass);
+  } 
   
   //*****************Checking if SPIFFS available********************************
 
@@ -294,6 +300,24 @@ void setup() {
     Serial.println(" hours more to get sufficient data.");
   }
   Serial.println("********************************************************");
+
+//**************************Sending Data to Blynk and ThingSpeak*********************************
+  // code block for uploading data to BLYNK App
+  
+  if (App1 == "BLYNK") {
+    Blynk.virtualWrite(0, measured_temp);            // virtual pin 0
+    Blynk.virtualWrite(1, measured_humi);            // virtual pin 1
+    Blynk.virtualWrite(2, measured_pres);            // virtual pin 2
+    Blynk.virtualWrite(3, rel_pressure_rounded);     // virtual pin 3
+    Blynk.virtualWrite(4, volt);                     // virtual pin 4
+    Blynk.virtualWrite(5, DewpointTemperature);      // virtual pin 5
+    Blynk.virtualWrite(6, HeatIndex);                // virtual pin 6
+    Blynk.virtualWrite(7, ZambrettisWords);          // virtual pin 7
+    Blynk.virtualWrite(8, accuracy_in_percent);      // virtual pin 8
+    Blynk.virtualWrite(9, trend_in_words);           // virtual pin 9
+    Blynk.virtualWrite(10,DewPointSpread);           // virtual pin 10
+    Serial.println("Data written to Blink ...");
+  }
 
  //*******************************************************************************
  // code block for uploading data to Thingspeak website

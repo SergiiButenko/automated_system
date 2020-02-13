@@ -20,6 +20,8 @@ char pass[] = "0660101327";             // WiFi Router password
 const char* server = "192.168.1.22";        // Thingspeak Write API
 const char* api_key = "your Thingspeak API key";         // API write key 
 
+const int retry_limit = 5;
+
 /****** MQTT Settings ********************************************************/
 
 const char* mqtt_server = "192.xxx.xxx.xxx";      // MQTT Server (broker) address
