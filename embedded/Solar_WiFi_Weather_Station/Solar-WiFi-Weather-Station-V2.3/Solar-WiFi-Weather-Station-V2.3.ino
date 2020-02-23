@@ -93,12 +93,14 @@
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <BlynkSimpleEsp8266.h>  //https://github.com/blynkkk/blynk-library
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiUdp.h>
 #include "FS.h"
 #include <EasyNTPClient.h>       //https://github.com/aharshac/EasyNTPClient
 #include <TimeLib.h>             //https://github.com/PaulStoffregen/Time.git
+#include <ESP8266mDNS.h>
 
 Adafruit_BME280 bme;             // I2C
 WiFiUDP udp;
@@ -172,6 +174,12 @@ void setup() {
     Serial.print(".");
   }
   Serial.println(" Wifi connected ok");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  if (MDNS.begin(String(device_shotname))) {
+    Serial.println("MDNS responder started");
+  }
 
 
   //*****************Checking if SPIFFS available********************************
@@ -301,9 +309,13 @@ void setup() {
   // code block for uploading data to server
 
 
-  String postStr = server;
+  String postStr = host;
   postStr += "/weather?api_key=";
   postStr += api_key;
+  postStr += "&device_shotname=";
+  postStr += String(device_shotname);
+  postStr += "&device_id=";
+  postStr += String(device_id);
   postStr += "&rel_pressure_rounded=";
   postStr += String(rel_pressure_rounded);
   postStr += "&measured_temp=";
@@ -687,9 +699,7 @@ void send_request(String req) {
     Serial.println(req);
     Serial.print(i);
     Serial.print(" try out of ");
-    Serial.print(retry_limit);
-    Serial.print(". host:");
-    Serial.println(server);
+    Serial.println(retry_limit);
 
     http.begin(req);
 

@@ -1,8 +1,5 @@
 from datetime import datetime, timezone
-
-from models.line_task import LineTask
-from models.device import Device
-from resources import Db
+from resources.task_dao import TaskDAO
 
 import logging
 
@@ -10,46 +7,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class DeviceTask:
+class IrrigationTask:
     @staticmethod
-    def get_by_id(device_task_id):
-        q = """select dt.id, dt.device_id, dt.type, dt.exec_time, 
-                json_agg(lt.*) as "line_tasks"
-                from device_tasks as dt
-                join line_tasks as lt
-                on  dt.id = lt.device_task_id
-                where lt.device_task_id = %(device_task_id)s
-                group by dt.id
-                      """
-        device_task = Db.execute(
-            query=q, params={"device_task_id": device_task_id}, method="fetchone"
-        )
-        device_task["line_tasks"] = map(
-            lambda x: LineTask(**x), device_task["line_tasks"]
-        )
+    def get_by_id(task_id):
+        device_task = TaskDAO.get_by_id(task_id)
 
-        return DeviceTask(**device_task)
+        return IrrigationTask(**device_task)
 
     @staticmethod
     def get_next_for_device_id(device_id):
-        q = """SELECT dt.id, dt.device_id, dt.type, dt.exec_time, 
-                json_agg(lt.*) as "line_tasks"
-                FROM device_tasks as dt
-                JOIN line_tasks as lt
-                ON dt.id = lt.device_task_id
-                WHERE dt.device_id = %(device_id)s
-                AND lt.exec_time >= now() - INTERVAL '1 HOUR'
-                GROUP BY dt.id
-                LIMIT 1
-        """
-        device_task = Db.execute(
-            query=q, params={"device_id": device_id}, method="fetchone"
-        )
-        device_task["line_tasks"] = map(
-            lambda x: LineTask(**x), device_task["line_tasks"]
-        )
+        device_task = TaskDAO.get_next_for_device_id(device_id)
 
-        return DeviceTask(**device_task)
+        return IrrigationTask(**device_task)
 
     @staticmethod
     def calculate(device_id, lines):
@@ -70,7 +39,7 @@ class DeviceTask:
             exec_time = task.next_rule_start_time
             line_tasks.append(task)
 
-        return DeviceTask(
+        return IrrigationTask(
             device_id=device_id, line_tasks=line_tasks, exec_time=exec_time
         )
 

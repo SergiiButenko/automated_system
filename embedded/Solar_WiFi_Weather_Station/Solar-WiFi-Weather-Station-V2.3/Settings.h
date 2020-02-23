@@ -1,26 +1,13 @@
-/*----------------------------------------------------------------------------------------------------
-  Project Name : Solar Powered WiFi Weather Station V2.31
-  Features: temperature, dewpoint, dewpoint spread, heat index, humidity, absolute pressure, relative pressure, battery status and
-  the famous Zambretti Forecaster (multi lingual)
-  Authors: Keith Hungerford, Debasish Dutta and Marc Stähli
-  Website : www.opengreenenergy.com
-
-******* configuration control constant for use of Blynk and/or Thingspeak ***/
-
-const String App1 = "";         // empty string if not applicable -> "" else "BLYNK" 
-const String App2 = "THINGSPEAK";    // empty string if not applicable -> "" else "THINGSPEAK"
-
-/****** Blink or ThingSpeak Settings ****************************************/
-
-char auth[] = "your Blynk Auth Token"; // Blynk Auth Token
-
 char ssid[] = "NotebookNet";            // WiFi Router ssid
 char pass[] = "0660101327";             // WiFi Router password
-int retry_limit = 5;
-int delay_between_requests = 10000;
-
-const char* server = "192.168.1.22";        // Thingspeak Write API
+const char* host = "http://mozz.asuscomm.com:9000";
+const char* device_shotname = "weather_station_solar";
+const char* device_id = "a575212a-ee1c-4237-910f-9fb4c9a32190";
 const char* api_key = "123";         // API write key 
+
+
+const int delay_between_requests = 10000;
+const int retry_limit = 5;
 
 /****** MQTT Settings ********************************************************/
 
